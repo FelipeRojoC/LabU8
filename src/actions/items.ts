@@ -47,6 +47,7 @@ export async function guardarItemAction(_prev: Resultado, fd: FormData): Promise
       descripcion: texto(fd.get("descripcion")),
       categoria_id,
       ubicacion_id,
+      dueno_id: numero(fd.get("dueno_id")),
       marca: texto(fd.get("marca")),
       modelo: texto(fd.get("modelo")),
       n_serie: texto(fd.get("n_serie")),
@@ -108,6 +109,43 @@ export async function eliminarItemAction(_prev: Resultado, fd: FormData): Promis
     await borrarFoto(it?.foto);
     revalidatePath("/inventario");
     return { ok: true };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
+}
+
+/**
+ * Carga rápida: agrega un ítem con lo mínimo y deja al ayudante en la misma
+ * pantalla para seguir con el siguiente. La ubicación y la categoría se fijan
+ * una vez y se arrastran, que es como se recorre un estante.
+ */
+export async function agregarRapidoAction(_prev: Resultado, fd: FormData): Promise<Resultado> {
+  try {
+    const autor = await ayudanteEnTurno();
+    const nombre = String(fd.get("nombre") ?? "").trim();
+    if (nombre.length < 2) return { ok: false, error: "Escribe el nombre del ítem" };
+
+    let categoria_id = numero(fd.get("categoria_id"));
+    const catNueva = texto(fd.get("categoria_nueva"));
+    if (catNueva) categoria_id = crearCategoria(catNueva);
+
+    let ubicacion_id = numero(fd.get("ubicacion_id"));
+    const ubiNueva = texto(fd.get("ubicacion_nueva"));
+    if (ubiNueva) ubicacion_id = crearUbicacion(ubiNueva);
+
+    const id = crearItem(
+      {
+        nombre,
+        cantidad_total: numero(fd.get("cantidad_total")) ?? 1,
+        categoria_id,
+        ubicacion_id,
+        marca: texto(fd.get("marca")),
+        dueno_id: numero(fd.get("dueno_id")),
+      },
+      autor?.id,
+    );
+    revalidatePath("/inventario");
+    return { ok: true, id };
   } catch (e) {
     return { ok: false, error: (e as Error).message };
   }

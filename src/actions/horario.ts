@@ -2,11 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { crearClase, crearTurno, eliminarClase, eliminarTurno } from "@/lib/queries/horario";
+import { exigirEncargado } from "@/lib/session";
 
 export interface Resultado { ok: boolean; error?: string }
 
 export async function agregarTurnoAction(_prev: Resultado, fd: FormData): Promise<Resultado> {
   try {
+    await exigirEncargado();
     const persona_id = Number(fd.get("persona_id"));
     const dia = Number(fd.get("dia"));
     const bloques = fd.getAll("bloque").map(String).filter(Boolean);
@@ -22,6 +24,7 @@ export async function agregarTurnoAction(_prev: Resultado, fd: FormData): Promis
 }
 
 export async function quitarTurnoAction(fd: FormData) {
+  await exigirEncargado();
   eliminarTurno(Number(fd.get("id")));
   revalidatePath("/horario");
   revalidatePath("/");
@@ -29,6 +32,7 @@ export async function quitarTurnoAction(fd: FormData) {
 
 export async function agregarClaseAction(_prev: Resultado, fd: FormData): Promise<Resultado> {
   try {
+    await exigirEncargado();
     const nombre = String(fd.get("nombre") ?? "").trim();
     if (!nombre) return { ok: false, error: "Escribe el nombre del ramo" };
     crearClase({
@@ -48,6 +52,7 @@ export async function agregarClaseAction(_prev: Resultado, fd: FormData): Promis
 }
 
 export async function quitarClaseAction(fd: FormData) {
+  await exigirEncargado();
   eliminarClase(Number(fd.get("id")));
   revalidatePath("/horario");
   revalidatePath("/");

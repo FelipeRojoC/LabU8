@@ -25,24 +25,65 @@ npm start
 1. **Abrir turno** (arriba a la derecha). El ayudante elige su nombre y escribe su
    PIN. Queda registrado como quien entrega y quien recibe cada equipo, y se
    guarda la hora real de inicio. Al cerrar el turno se guarda la de término.
-2. **Registrar salida** (`/prestamos/nuevo`): buscar los equipos, indicar quién se
-   los lleva y cuándo los devuelve. Si la persona no está en la lista, se crea ahí
-   mismo con «Es alguien nuevo».
-3. **Devolución** (`/prestamos/[id]`): se puede devolver todo o solo una parte.
-   Cada línea se marca como *buen estado*, *dañado* (el equipo pasa a
-   mantenimiento) o *perdido* (se descuenta del stock).
-4. **Inventario** (`/inventario`): el catálogo va creciendo con «Agregar ítem».
-   Desde el celular el botón de foto abre la cámara directamente. Las categorías
-   y ubicaciones nuevas se crean desde el mismo formulario.
-5. **Horario** (`/horario`): dos tablas separadas, porque los ayudantes tienen su
+2. **Panel**: lo primero que se ve es qué pasó desde el último turno —cuántas
+   salidas y devoluciones hubo— y los **recados que dejaron los ayudantes
+   anteriores**. Cualquiera en turno puede dejar el suyo. Arriba de todo
+   aparecen las incidencias que el encargado todavía no revisa.
+3. **Registrar salida** (`/prestamos/nuevo`): se buscan los equipos, se busca a
+   la persona **por nombre o RUT** y se escribe la fecha de devolución (siempre
+   obligatoria, sin valor sugerido). Si la persona no existe se crea ahí mismo,
+   y el RUT y el correo son obligatorios: son el respaldo si pasa algo.
+4. **Devolución**: desde la lista de préstamos, «Devolver todo» en un clic. Si
+   volvió solo una parte o algo llegó dañado, se entra al préstamo y se marca
+   línea por línea. «Dañado» manda el equipo a mantenimiento, «perdido» lo
+   descuenta del stock, y **en los dos casos le avisa al encargado**.
+5. **Inventario** (`/inventario`): el catálogo crece con «Agregar ítem» (ficha
+   completa con foto) o con **«Carga rápida»**, pensada para recorrer un estante:
+   se fija la ubicación una vez y después es solo nombre, cantidad y Enter. Los
+   filtros se arman solos con lo que se va cargando —categoría, ubicación, marca,
+   dueño— y los atajos de arriba («12 sin foto», «5 sin ubicación») sirven para
+   ir cerrando el inventario de a poco sin perder el hilo.
+6. **Material de docentes**: lo que un profesor deja guardado en los estantes
+   entra ítem por ítem con su nombre en el campo «Dueño». Se presta igual que el
+   resto, pero siempre queda claro de quién es y quién se lo llevó.
+7. **Horario** (`/horario`): dos tablas separadas, porque los ayudantes tienen su
    propia grilla — entran a las 8:00, antes de que empiecen las clases a las 8:10.
    Arriba los turnos de ayudantes (T1–T7), abajo las clases (bloques A–G). El
-   panel de inicio usa ambas para mostrar qué pasa ahora y quién viene después.
-6. **Registro de turnos** (`/registro`): quién abrió, a qué hora, cuántos bloques
+   panel usa ambas para mostrar qué pasa ahora y quién viene después.
+8. **Registro de turnos** (`/registro`): quién abrió, a qué hora, cuántos bloques
    cubrió y cuántas horas suma en el mes. Las horas se cuentan contra la apertura
    real, no contra el horario, así que **un reemplazo queda a nombre de quien
-   efectivamente abrió** y aparece marcado como tal. También lista los bloques
-   del horario que el titular no abrió y quién los cubrió.
+   efectivamente abrió** y aparece marcado como tal.
+
+### Quién puede hacer qué
+
+| | Ayudante | Encargado |
+| --- | :---: | :---: |
+| Prestar y recibir devoluciones | sí | sí |
+| Agregar y editar ítems | sí | sí |
+| Dejar recados en la bitácora | sí | sí |
+| Ver todo | sí | sí |
+| **Anular** un préstamo mal registrado | no | sí |
+| Editar el horario y los turnos | no | sí |
+| Dar por revisada una incidencia | no | sí |
+| Exportar a Excel | no | sí |
+
+El encargado se marca con una casilla en la ficha de la persona (`/personas`).
+
+### Quien debe equipos no puede llevarse más
+
+Si alguien tiene préstamos vencidos sin devolver, el sistema **bloquea** la nueva
+salida y le dice al ayudante que hable con el encargado. No hay forma de saltarse
+el bloqueo desde la aplicación; la única salida es devolver lo que debe, o que el
+encargado anule el préstamo pendiente. Si esto resulta demasiado rígido en la
+práctica, el bloqueo está en un solo lugar: `crearPrestamo()`, en
+`src/lib/queries/prestamos.ts`.
+
+### Exportar
+
+El encargado tiene un botón de descarga en Inventario, Préstamos y Registro de
+turnos. Sale un CSV con BOM y separador `;`, que es lo que Excel en español abre
+sin romper las tildes.
 
 ### Ayudantes y PIN inicial
 
@@ -68,7 +109,7 @@ turno abierto por una persona de otro.
 | `db/schema.sql` | Esquema completo de la base |
 | `scripts/seed.mjs` | Carga inicial (horario, categorías, inventario base) |
 | `src/lib/db.ts` | Conexión SQLite, bitácora, utilidades de fecha |
-| `src/lib/queries/` | Consultas: `items`, `prestamos`, `personas`, `horario`, `turnos` |
+| `src/lib/queries/` | Consultas: `items`, `prestamos`, `personas`, `horario`, `turnos`, `novedades` |
 | `src/lib/migrar.mjs` | Cambios de forma sobre bases ya creadas (lo usan app y seed) |
 | `src/actions/` | Server actions (todas las escrituras pasan por aquí) |
 | `src/app/` | Páginas |
@@ -97,6 +138,14 @@ turno abierto por una persona de otro.
   reemplazos, y de las horas cubiertas sale el resumen mensual.
 - **«Estar en turno» es tener sesión abierta hoy**, no solo tener la cookie: la
   cabecera y el registro leen del mismo dato y no pueden contradecirse.
+- **Buscador, no lista desplegable**: con cientos de alumnos un `<select>` es
+  inusable, sobre todo en el celular. Se busca escribiendo nombre o RUT y la
+  consulta sale una vez por pausa de tecleo, no por tecla.
+- **Nada se borra**: un préstamo mal registrado se *anula* —queda con quién lo
+  anuló y por qué, y libera el stock—, y un equipo que ya no está se da de baja.
+  El historial siempre se puede reconstruir.
+- **Un consumible se entrega, no se presta**: baja del stock en el momento y la
+  línea nace saldada, para que no quede eternamente como pendiente de devolución.
 
 ## Puesta en el servidor UCN
 

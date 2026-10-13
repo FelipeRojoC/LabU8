@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS personas (
   telefono     TEXT,
   carrera      TEXT,
   pin          TEXT,            -- solo ayudantes/tecnicos: login simple del turno
+  es_encargado INTEGER NOT NULL DEFAULT 0,  -- puede anular prestamos y editar el horario
   activo       INTEGER NOT NULL DEFAULT 1,
   creado_en    TEXT    NOT NULL DEFAULT (datetime('now','localtime'))
 );
@@ -53,12 +54,16 @@ CREATE TABLE IF NOT EXISTS items (
   estado         TEXT    NOT NULL DEFAULT 'operativo'
                          CHECK (estado IN ('operativo','mantenimiento','baja')),
   foto           TEXT,                        -- nombre de archivo en data/uploads
+  -- Material que un docente deja guardado en los estantes del laboratorio.
+  -- NULL = es del laboratorio. Se presta igual, pero queda claro de quien es.
+  dueno_id       INTEGER REFERENCES personas(id) ON DELETE SET NULL,
   notas          TEXT,
   creado_en      TEXT    NOT NULL DEFAULT (datetime('now','localtime')),
   actualizado_en TEXT    NOT NULL DEFAULT (datetime('now','localtime'))
 );
 CREATE INDEX IF NOT EXISTS idx_items_nombre ON items(nombre);
 CREATE INDEX IF NOT EXISTS idx_items_cat    ON items(categoria_id);
+CREATE INDEX IF NOT EXISTS idx_items_dueno  ON items(dueno_id);
 
 -- ------------------------------------------------------------- prestamos
 CREATE TABLE IF NOT EXISTS prestamos (
@@ -72,8 +77,12 @@ CREATE TABLE IF NOT EXISTS prestamos (
   vence_en             TEXT    NOT NULL,      -- cuando promete devolverlo
   devuelto_en          TEXT,
   estado               TEXT    NOT NULL DEFAULT 'activo'
-                               CHECK (estado IN ('activo','devuelto','cancelado')),
-  observaciones        TEXT
+                               CHECK (estado IN ('activo','devuelto','anulado')),
+  observaciones        TEXT,
+  -- anulacion de un prestamo mal registrado: solo el encargado
+  anulado_por_id       INTEGER REFERENCES personas(id),
+  anulado_en           TEXT,
+  motivo_anulacion     TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_prestamos_estado ON prestamos(estado, vence_en);
 
@@ -143,6 +152,24 @@ CREATE TABLE IF NOT EXISTS sesiones_turno (
 CREATE INDEX IF NOT EXISTS idx_sesiones_fecha   ON sesiones_turno(fecha);
 CREATE INDEX IF NOT EXISTS idx_sesiones_persona ON sesiones_turno(persona_id, fecha);
 
+
+-- ------------------------------------------------------------- novedades
+-- Lo que un turno le deja dicho al siguiente, mas los avisos que genera el
+-- propio sistema (un equipo que volvio danado, uno que no volvio).
+CREATE TABLE IF NOT EXISTS novedades (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  persona_id   INTEGER REFERENCES personas(id) ON DELETE SET NULL, -- NULL = el sistema
+  tipo         TEXT    NOT NULL DEFAULT 'nota'
+                       CHECK (tipo IN ('nota','incidencia')),
+  texto        TEXT    NOT NULL,
+  item_id      INTEGER REFERENCES items(id) ON DELETE SET NULL,
+  prestamo_id  INTEGER REFERENCES prestamos(id) ON DELETE SET NULL,
+  visto_en     TEXT,                                   -- el encargado la reviso
+  visto_por_id INTEGER REFERENCES personas(id),
+  creado_en    TEXT    NOT NULL DEFAULT (datetime('now','localtime'))
+);
+CREATE INDEX IF NOT EXISTS idx_novedades_fecha ON novedades(creado_en DESC);
+CREATE INDEX IF NOT EXISTS idx_novedades_tipo  ON novedades(tipo, visto_en);
 
 -- --------------------------------------------------------------- bitacora
 CREATE TABLE IF NOT EXISTS bitacora (

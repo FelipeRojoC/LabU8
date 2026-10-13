@@ -52,6 +52,7 @@ export default async function Personas({
                     </p>
                   </div>
                   <Pill tono={TONO_ROL[p.rol]}>{p.rol}</Pill>
+                  {p.es_encargado === 1 && <Pill tono="info">encargado</Pill>}
                   {abiertos > 0 && <Pill tono="aviso">{abiertos} préstamo(s) activo(s)</Pill>}
                   <span className="text-xs text-muted">{hist.length} en total</span>
                   <Link href={`/personas?edit=${p.id}`} className="btn btn-ghost">Editar</Link>

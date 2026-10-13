@@ -5,18 +5,19 @@ import { useRouter } from "next/navigation";
 import { Camera, Plus, X } from "lucide-react";
 import { guardarItemAction } from "@/actions/items";
 import { Aviso, BotonEnviar, Campo } from "@/components/ui";
-import type { Categoria, ItemVista, Ubicacion } from "@/lib/types";
+import type { Categoria, ItemVista, Persona, Ubicacion } from "@/lib/types";
 
 /**
  * Formulario único para alta y edición. La foto se puede tomar directo con
  * la cámara del teléfono (capture) o subir un archivo.
  */
 export function ItemForm({
-  item, categorias, ubicaciones, codigoSugerido,
+  item, categorias, ubicaciones, docentes, codigoSugerido,
 }: {
   item?: ItemVista;
   categorias: Categoria[];
   ubicaciones: Ubicacion[];
+  docentes: Persona[];
   codigoSugerido: string;
 }) {
   const router = useRouter();
@@ -162,6 +163,13 @@ export function ItemForm({
           <Campo etiqueta="N.º de serie">
             <input name="n_serie" defaultValue={item?.n_serie ?? ""} className="input-base font-mono" />
           </Campo>
+          <Campo etiqueta="Dueño" hint="Material que un docente deja guardado acá">
+            <select name="dueno_id" defaultValue={item?.dueno_id ?? ""} className="input-base">
+              <option value="">Del laboratorio</option>
+              {docentes.map((d) => <option key={d.id} value={d.id}>{d.nombre}</option>)}
+            </select>
+          </Campo>
+
           <Campo etiqueta="Estado">
             <select name="estado" defaultValue={item?.estado ?? "operativo"} className="input-base">
               <option value="operativo">Operativo</option>

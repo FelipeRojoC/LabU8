@@ -1,15 +1,18 @@
 import Link from "next/link";
-import { Plus, Search } from "lucide-react";
+import { Download, Plus, Search } from "lucide-react";
 import { listarPrestamos, resumenPrestamos } from "@/lib/queries/prestamos";
 import { Foto } from "@/components/Foto";
 import { Pill, Vacio } from "@/components/ui";
+import { DevolverRapido } from "@/components/AccionesPrestamo";
 import { parseFecha } from "@/lib/db";
+import { encargadoEnTurno } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 const TABS = [
   { k: "activo", t: "Activos" },
   { k: "devuelto", t: "Devueltos" },
+  { k: "anulado", t: "Anulados" },
   { k: "todos", t: "Todos" },
 ] as const;
 
@@ -17,9 +20,11 @@ export default async function Prestamos({
   searchParams,
 }: { searchParams: Promise<{ estado?: string; q?: string }> }) {
   const sp = await searchParams;
-  const estado = (sp.estado ?? "activo") as "activo" | "devuelto" | "todos";
+  const estado = (sp.estado ?? "activo") as "activo" | "devuelto" | "anulado" | "todos";
   const prestamos = listarPrestamos({ estado, q: sp.q });
   const r = resumenPrestamos();
+  const encargado = await encargadoEnTurno();
+  const anio = new Date().getFullYear();
 
   return (
     <div className="space-y-5">
@@ -30,9 +35,19 @@ export default async function Prestamos({
             {r.activos} activos · {r.atrasados} atrasados · {r.salidasHoy} salidas hoy
           </p>
         </div>
-        <Link href="/prestamos/nuevo" className="btn btn-primary">
-          <Plus size={16} aria-hidden /> Registrar salida
-        </Link>
+        <div className="flex gap-2">
+          {encargado && (
+            <a
+              href={`/api/exportar/prestamos?desde=${anio}-01-01&hasta=${anio}-12-31`}
+              className="btn btn-ghost" title="Descargar el año para Excel"
+            >
+              <Download size={16} aria-hidden /> Exportar {anio}
+            </a>
+          )}
+          <Link href="/prestamos/nuevo" className="btn btn-primary">
+            <Plus size={16} aria-hidden /> Registrar salida
+          </Link>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -72,8 +87,8 @@ export default async function Prestamos({
                 ? p.lineas.filter((l) => l.cantidad > l.cantidad_devuelta)
                 : p.lineas;
             return (
-              <li key={p.id}>
-                <Link href={`/prestamos/${p.id}`} className="card flex flex-wrap items-center gap-4 p-4 transition hover:shadow-md">
+              <li key={p.id} className="card flex flex-wrap items-center gap-4 p-4 transition hover:shadow-md">
+                <Link href={`/prestamos/${p.id}`} className="flex flex-1 flex-wrap items-center gap-4">
                   <div className="flex -space-x-2">
                     {visibles.slice(0, 4).map((l) => (
                       <Foto key={l.id} nombre={l.foto} alt={l.nombre} size="sm" className="ring-2 ring-white" />
@@ -108,6 +123,8 @@ export default async function Prestamos({
                   <div className="flex flex-col items-end gap-1">
                     {p.estado === "devuelto" ? (
                       <Pill tono="gris">Devuelto</Pill>
+                    ) : p.estado === "anulado" ? (
+                      <Pill tono="gris">Anulado</Pill>
                     ) : p.atrasado ? (
                       <Pill tono="peligro">Atrasado</Pill>
                     ) : (
@@ -118,6 +135,8 @@ export default async function Prestamos({
                     )}
                   </div>
                 </Link>
+
+                {p.estado === "activo" && <DevolverRapido prestamoId={p.id} />}
               </li>
             );
           })}

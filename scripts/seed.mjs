@@ -16,8 +16,8 @@ fs.mkdirSync(path.join(DATA_DIR, "uploads"), { recursive: true });
 const db = new Database(path.join(DATA_DIR, "labu8.db"));
 db.pragma("foreign_keys = ON");
 const SCHEMA = fs.readFileSync(path.join(process.cwd(), "db", "schema.sql"), "utf8");
-db.exec(SCHEMA);
 migrar(db, SCHEMA);
+db.exec(SCHEMA);
 
 if (RESET) {
   db.exec(`
@@ -86,12 +86,14 @@ const DOCENTES = [
   "Christian David Camacho Morales", "Oswaldo Aníbal Menéndez Granizo",
 ];
 const insPersona = db.prepare(
-  `INSERT INTO personas (nombre,rol,pin,carrera) VALUES (?,?,?,?)`,
+  `INSERT INTO personas (nombre,rol,pin,carrera,email,es_encargado) VALUES (?,?,?,?,?,?)`,
 );
 const existePersona = db.prepare("SELECT id FROM personas WHERE nombre = ?");
-function persona(nombre, rol, pin = null, carrera = null) {
+function persona(nombre, rol, pin = null, carrera = null, email = null, encargado = 0) {
   const e = existePersona.get(nombre);
-  return e ? e.id : Number(insPersona.run(nombre, rol, pin, carrera).lastInsertRowid);
+  return e
+    ? e.id
+    : Number(insPersona.run(nombre, rol, pin, carrera, email, encargado).lastInsertRowid);
 }
 for (const d of DOCENTES) persona(d, "docente");
 
@@ -106,6 +108,11 @@ const AYUDANTES = [
   ["Adriana",   "2105"],
   ["Adrian",    "2106"],
 ];
+// Encargado del laboratorio: el único que puede anular préstamos y tocar el
+// horario. Cambia el nombre y el PIN desde /personas.
+persona("Felipe Rojo", "ayudante", "9090", "Encargado del laboratorio",
+        "felipe.rojo@alumnos.ucn.cl", 1);
+
 const idAyudante = new Map(
   AYUDANTES.map(([n, pin]) => [n, persona(n, "ayudante", pin, "Ayudantía Electrotecnia")]),
 );

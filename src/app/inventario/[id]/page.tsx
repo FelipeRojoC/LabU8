@@ -91,6 +91,7 @@ export default async function DetalleItem({ params }: { params: Promise<{ id: st
             <dl className="grid gap-4 sm:grid-cols-3">
               <Dato k="Categoría" v={item.categoria} />
               <Dato k="Ubicación" v={item.ubicacion} />
+              <Dato k="En custodia de" v={item.dueno} />
               <Dato k="Marca" v={item.marca} />
               <Dato k="Modelo" v={item.modelo} />
               <Dato k="N.º de serie" v={item.n_serie} />

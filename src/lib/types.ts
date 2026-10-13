@@ -1,6 +1,6 @@
 export type Rol = "ayudante" | "estudiante" | "docente" | "tecnico" | "externo";
 export type EstadoItem = "operativo" | "mantenimiento" | "baja";
-export type EstadoPrestamo = "activo" | "devuelto" | "cancelado";
+export type EstadoPrestamo = "activo" | "devuelto" | "anulado";
 
 export interface Persona {
   id: number;
@@ -11,6 +11,8 @@ export interface Persona {
   telefono: string | null;
   carrera: string | null;
   pin: string | null;
+  /** Puede anular préstamos y editar el horario y los turnos. */
+  es_encargado: number;
   activo: number;
   creado_en: string;
 }
@@ -33,6 +35,8 @@ export interface Item {
   consumible: number;
   estado: EstadoItem;
   foto: string | null;
+  /** Docente que dejó el material en custodia. NULL = es del laboratorio. */
+  dueno_id: number | null;
   notas: string | null;
   creado_en: string;
   actualizado_en: string;
@@ -43,6 +47,7 @@ export interface ItemVista extends Item {
   categoria: string | null;
   color: string | null;
   ubicacion: string | null;
+  dueno: string | null;
   prestado: number;
   disponible: number;
 }
@@ -59,6 +64,9 @@ export interface Prestamo {
   devuelto_en: string | null;
   estado: EstadoPrestamo;
   observaciones: string | null;
+  anulado_por_id: number | null;
+  anulado_en: string | null;
+  motivo_anulacion: string | null;
 }
 
 export interface PrestamoLinea {
@@ -129,6 +137,31 @@ export interface BloqueCubierto {
   titulares: string[];
   /** true cuando quien abrió no figuraba en el horario de ese bloque. */
   reemplazo: boolean;
+}
+
+/** Nota del turno o aviso del sistema. Es el muro que un turno le deja al otro. */
+export interface Novedad {
+  id: number;
+  persona_id: number | null;
+  tipo: "nota" | "incidencia";
+  texto: string;
+  item_id: number | null;
+  prestamo_id: number | null;
+  visto_en: string | null;
+  visto_por_id: number | null;
+  creado_en: string;
+  persona?: string | null;
+  item?: string | null;
+  visto_por?: string | null;
+}
+
+/** Lo que una persona debe: préstamos vencidos sin devolver. */
+export interface Deuda {
+  prestamo_id: number;
+  folio: string | null;
+  vence_en: string;
+  diasAtraso: number;
+  items: string;
 }
 
 export const DIAS = [

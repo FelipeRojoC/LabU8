@@ -12,21 +12,28 @@ const PRESTADO_SQL = `
 
 const BASE = `
   SELECT i.*,
-         c.nombre AS categoria,
-         c.color  AS color,
-         u.nombre AS ubicacion,
+         c.nombre  AS categoria,
+         c.color   AS color,
+         u.nombre  AS ubicacion,
+         d.nombre  AS dueno,
          ${PRESTADO_SQL} AS prestado,
          i.cantidad_total - ${PRESTADO_SQL} AS disponible
   FROM items i
   LEFT JOIN categorias  c ON c.id = i.categoria_id
-  LEFT JOIN ubicaciones u ON u.id = i.ubicacion_id`;
+  LEFT JOIN ubicaciones u ON u.id = i.ubicacion_id
+  LEFT JOIN personas    d ON d.id = i.dueno_id`;
 
 export interface FiltroItems {
   q?: string;
   categoria_id?: number;
   ubicacion_id?: number;
+  marca?: string;
+  dueno_id?: number;
   estado?: string;
-  soloDisponibles?: boolean;
+  /** Qué falta por completar: para ir cerrando el inventario de a poco. */
+  falta?: "foto" | "ubicacion" | "categoria" | "codigo";
+  /** Disponibilidad ahora mismo. */
+  disp?: "disponibles" | "prestados" | "agotados";
 }
 
 export function listarItems(f: FiltroItems = {}): ItemVista[] {
@@ -41,12 +48,32 @@ export function listarItems(f: FiltroItems = {}): ItemVista[] {
   }
   if (f.categoria_id) { cond.push("i.categoria_id = @categoria_id"); args.categoria_id = f.categoria_id; }
   if (f.ubicacion_id) { cond.push("i.ubicacion_id = @ubicacion_id"); args.ubicacion_id = f.ubicacion_id; }
+  if (f.dueno_id)     { cond.push("i.dueno_id = @dueno_id");         args.dueno_id = f.dueno_id; }
   if (f.estado)       { cond.push("i.estado = @estado");             args.estado = f.estado; }
+  if (f.marca)        { cond.push("i.marca = @marca");               args.marca = f.marca; }
+
+  // «Lo que falta completar»: para ir cerrando el inventario sin perder el hilo.
+  const FALTA: Record<string, string> = {
+    foto: "i.foto IS NULL",
+    ubicacion: "i.ubicacion_id IS NULL",
+    categoria: "i.categoria_id IS NULL",
+    codigo: "(i.codigo IS NULL OR i.codigo = '')",
+  };
+  if (f.falta && FALTA[f.falta]) cond.push(FALTA[f.falta]);
 
   const where = cond.length ? ` WHERE ${cond.join(" AND ")}` : "";
-  const having = f.soloDisponibles ? " HAVING disponible > 0" : "";
-  const sql = `${BASE}${where}${having ? ` GROUP BY i.id${having}` : ""} ORDER BY i.nombre COLLATE NOCASE`;
-  return db.prepare(sql).all(args) as ItemVista[];
+
+  // La disponibilidad es una columna calculada: va en HAVING, no en WHERE.
+  const DISP: Record<string, string> = {
+    disponibles: "disponible > 0",
+    prestados: "prestado > 0",
+    agotados: "disponible <= 0",
+  };
+  const having = f.disp && DISP[f.disp] ? ` GROUP BY i.id HAVING ${DISP[f.disp]}` : "";
+
+  return db
+    .prepare(`${BASE}${where}${having} ORDER BY i.nombre COLLATE NOCASE`)
+    .all(args) as ItemVista[];
 }
 
 export function obtenerItem(id: number): ItemVista | undefined {
@@ -85,14 +112,16 @@ export function crearItem(data: Partial<EntradaItem> & { nombre: string }, autor
   const info = db
     .prepare(
       `INSERT INTO items (codigo, nombre, descripcion, categoria_id, ubicacion_id, marca,
-                          modelo, n_serie, cantidad_total, prestable, consumible, estado, foto, notas)
+                          modelo, n_serie, cantidad_total, prestable, consumible, estado,
+                          foto, dueno_id, notas)
        VALUES (@codigo, @nombre, @descripcion, @categoria_id, @ubicacion_id, @marca,
-               @modelo, @n_serie, @cantidad_total, @prestable, @consumible, @estado, @foto, @notas)`,
+               @modelo, @n_serie, @cantidad_total, @prestable, @consumible, @estado,
+               @foto, @dueno_id, @notas)`,
     )
     .run({
       descripcion: null, categoria_id: null, ubicacion_id: null, marca: null,
       modelo: null, n_serie: null, cantidad_total: 1, prestable: 1, consumible: 0,
-      estado: "operativo", foto: null, notas: null,
+      estado: "operativo", foto: null, dueno_id: null, notas: null,
       ...data,
       codigo,
     });
@@ -112,7 +141,7 @@ export function actualizarItem(id: number, data: Partial<EntradaItem>, autorId?:
     `UPDATE items SET codigo=@codigo, nombre=@nombre, descripcion=@descripcion,
         categoria_id=@categoria_id, ubicacion_id=@ubicacion_id, marca=@marca, modelo=@modelo,
         n_serie=@n_serie, cantidad_total=@cantidad_total, prestable=@prestable,
-        consumible=@consumible, estado=@estado, foto=@foto, notas=@notas,
+        consumible=@consumible, estado=@estado, foto=@foto, dueno_id=@dueno_id, notas=@notas,
         actualizado_en = datetime('now','localtime')
      WHERE id=@id`,
   ).run({ ...nuevo, id });
@@ -176,6 +205,32 @@ export function crearUbicacion(nombre: string, descripcion?: string | null): num
     db.prepare("INSERT INTO ubicaciones (nombre,descripcion) VALUES (?,?)")
       .run(nombre, descripcion ?? null).lastInsertRowid,
   );
+}
+
+/** Marcas realmente usadas: el filtro se arma solo con lo que se va cargando. */
+export const listarMarcas = (): string[] =>
+  (db.prepare(
+    `SELECT DISTINCT marca FROM items
+     WHERE marca IS NOT NULL AND TRIM(marca) <> ''
+     ORDER BY marca COLLATE NOCASE`,
+  ).all() as Array<{ marca: string }>).map((r) => r.marca);
+
+/** Docentes que tienen material guardado en el laboratorio. */
+export const listarDuenos = (): Array<{ id: number; nombre: string }> =>
+  db.prepare(
+    `SELECT DISTINCT p.id, p.nombre FROM items i JOIN personas p ON p.id = i.dueno_id
+     ORDER BY p.nombre COLLATE NOCASE`,
+  ).all() as Array<{ id: number; nombre: string }>;
+
+/** Cuánto falta por completar, para mostrarlo junto a cada filtro. */
+export function pendientesInventario() {
+  return db.prepare(`
+    SELECT
+      (SELECT COUNT(*) FROM items WHERE foto IS NULL)         AS sinFoto,
+      (SELECT COUNT(*) FROM items WHERE ubicacion_id IS NULL) AS sinUbicacion,
+      (SELECT COUNT(*) FROM items WHERE categoria_id IS NULL) AS sinCategoria,
+      (SELECT COUNT(*) FROM items WHERE codigo IS NULL OR codigo = '') AS sinCodigo
+  `).get() as { sinFoto: number; sinUbicacion: number; sinCategoria: number; sinCodigo: number };
 }
 
 export function resumenInventario() {

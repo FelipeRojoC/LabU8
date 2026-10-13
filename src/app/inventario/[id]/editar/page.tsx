@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { ItemForm } from "@/components/ItemForm";
+import { listarPersonas } from "@/lib/queries/personas";
 import { listarCategorias, listarUbicaciones, obtenerItem, siguienteCodigo } from "@/lib/queries/items";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +24,7 @@ export default async function EditarItem({ params }: { params: Promise<{ id: str
         item={item}
         categorias={listarCategorias()}
         ubicaciones={listarUbicaciones()}
+        docentes={listarPersonas({ rol: "docente" })}
         codigoSugerido={siguienteCodigo()}
       />
     </div>

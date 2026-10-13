@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { AlertTriangle, ArrowLeftRight, Clock } from "lucide-react";
+import { AlertTriangle, ArrowLeftRight, Clock, Download } from "lucide-react";
 import { huecosDelMes, resumenMes, sesionesDelMes } from "@/lib/queries/turnos";
 import { CorregirCierre } from "@/components/CorregirCierre";
 import { Pill, Vacio } from "@/components/ui";
 import { DIAS } from "@/lib/types";
+import { encargadoEnTurno } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +33,9 @@ export default async function Registro({
   const resumen = resumenMes(anio, mes);
   const sesiones = sesionesDelMes(anio, mes);
   const huecos = huecosDelMes(anio, mes);
+  const encargado = await encargadoEnTurno();
+  const ultimo = new Date(anio, mes, 0).getDate();
+  const mm = String(mes).padStart(2, "0");
 
   const totalMin = resumen.reduce((a, r) => a + r.minutos, 0);
   const [aPrev, mPrev] = mesAnterior(anio, mes);
@@ -55,6 +59,14 @@ export default async function Registro({
           <Clock size={13} className="mr-1 inline text-brand" aria-hidden />
           {horas(totalMin)} en total
         </span>
+        {encargado && (
+          <a
+            href={`/api/exportar/horas?desde=${anio}-${mm}-01&hasta=${anio}-${mm}-${ultimo}`}
+            className="btn btn-ghost" title="Descargar el mes para Excel"
+          >
+            <Download size={16} aria-hidden /> Exportar
+          </a>
+        )}
       </div>
 
       {resumen.length === 0 ? (

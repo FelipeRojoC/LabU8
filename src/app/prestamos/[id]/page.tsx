@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Printer } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { obtenerPrestamo } from "@/lib/queries/prestamos";
-import { ayudanteEnTurno } from "@/lib/session";
+import { ayudanteEnTurno, encargadoEnTurno } from "@/lib/session";
 import { DevolucionForm } from "@/components/DevolucionForm";
 import { Foto } from "@/components/Foto";
 import { Pill } from "@/components/ui";
+import { AnularPrestamo, DevolverRapido } from "@/components/AccionesPrestamo";
 import { parseFecha } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +16,7 @@ export default async function DetallePrestamo({ params }: { params: Promise<{ id
   const p = obtenerPrestamo(Number(id));
   if (!p) notFound();
   const ayudante = await ayudanteEnTurno();
+  const encargado = await encargadoEnTurno();
   const vence = parseFecha(p.vence_en);
 
   return (
@@ -28,6 +30,8 @@ export default async function DetallePrestamo({ params }: { params: Promise<{ id
             {p.folio}
             {p.estado === "devuelto" ? (
               <Pill tono="gris">Devuelto</Pill>
+            ) : p.estado === "anulado" ? (
+              <Pill tono="gris">Anulado</Pill>
             ) : p.atrasado ? (
               <Pill tono="peligro">Atrasado</Pill>
             ) : (
@@ -35,13 +39,14 @@ export default async function DetallePrestamo({ params }: { params: Promise<{ id
             )}
           </h1>
         </div>
-        <a href="#comprobante" className="no-print btn btn-ghost">
-          <Printer size={15} aria-hidden /> Comprobante
-        </a>
+        <div className="flex flex-wrap gap-2">
+          {p.estado === "activo" && <DevolverRapido prestamoId={p.id} />}
+          {encargado && p.estado !== "anulado" && <AnularPrestamo prestamoId={p.id} />}
+        </div>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-3">
-        <div className="card space-y-4 p-4" id="comprobante">
+        <div className="card space-y-4 p-4">
           <div>
             <p className="label-x">Se lo llevó</p>
             <p className="font-medium">{p.persona}</p>
@@ -72,6 +77,13 @@ export default async function DetallePrestamo({ params }: { params: Promise<{ id
             <div>
               <p className="label-x">Motivo</p>
               <p className="text-sm">{p.motivo}</p>
+            </div>
+          )}
+          {p.estado === "anulado" && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+              <p className="label-x text-red-800">Anulado</p>
+              <p className="text-sm text-red-900">{p.motivo_anulacion}</p>
+              <p className="text-xs text-red-700">{p.anulado_en}</p>
             </div>
           )}
           {p.observaciones && (

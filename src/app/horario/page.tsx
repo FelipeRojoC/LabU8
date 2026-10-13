@@ -6,6 +6,7 @@ import { quitarClaseAction, quitarTurnoAction } from "@/actions/horario";
 import { listarPersonas } from "@/lib/queries/personas";
 import { ClaseForm, TurnoForm } from "@/components/HorarioForms";
 import { DIAS } from "@/lib/types";
+import { encargadoEnTurno } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
@@ -18,13 +19,14 @@ const TONO = {
   protegido: "border-slate-300 bg-slate-100",
 } as const;
 
-export default function Horario() {
+export default async function Horario() {
   const bloques = listarBloques();
   const bloquesTurno = listarBloquesTurno();
   const clases = listarClases();
   const turnos = listarTurnos();
   const ayudantes = listarPersonas({ rol: "ayudante" });
   const ahora = estadoAhora();
+  const encargado = await encargadoEnTurno();
 
   return (
     <div className="space-y-6">
@@ -73,13 +75,13 @@ export default function Horario() {
                                 <p className="pr-4 text-xs leading-tight font-medium text-violet-900">
                                   {t.persona}
                                 </p>
-                                <form action={quitarTurnoAction} className="absolute top-1 right-1 opacity-0 group-hover:opacity-100">
+                                {encargado && <form action={quitarTurnoAction} className="absolute top-1 right-1 opacity-0 group-hover:opacity-100">
                                   <input type="hidden" name="id" value={t.id} />
                                   <button className="text-violet-400 hover:text-danger" title="Quitar turno">
                                     <X size={12} aria-hidden />
                                     <span className="sr-only">Quitar turno de {t.persona}</span>
                                   </button>
-                                </form>
+                                </form>}
                               </div>
                             ))}
                             {ts.length === 0 && <span className="text-[11px] text-muted">—</span>}
@@ -132,13 +134,13 @@ export default function Horario() {
                                 <p className="pr-4 text-xs leading-tight font-medium">{c.nombre}</p>
                                 {c.codigo_ramo && <p className="font-mono text-[10px] text-muted">{c.codigo_ramo}</p>}
                                 {c.docente && <p className="text-[10px] text-muted">{c.docente}</p>}
-                                <form action={quitarClaseAction} className="absolute top-1 right-1 opacity-0 group-hover:opacity-100">
+                                {encargado && <form action={quitarClaseAction} className="absolute top-1 right-1 opacity-0 group-hover:opacity-100">
                                   <input type="hidden" name="id" value={c.id} />
                                   <button className="text-muted hover:text-danger" title="Quitar clase">
                                     <X size={12} aria-hidden />
                                     <span className="sr-only">Quitar {c.nombre}</span>
                                   </button>
-                                </form>
+                                </form>}
                               </div>
                             ))}
                             {cs.length === 0 && <span className="text-[11px] text-ok">libre</span>}
@@ -159,10 +161,16 @@ export default function Horario() {
         </div>
       </section>
 
-      <div className="grid gap-5 lg:grid-cols-2">
-        <TurnoForm ayudantes={ayudantes} bloques={bloquesTurno} />
-        <ClaseForm bloques={bloques} />
-      </div>
+      {encargado ? (
+        <div className="grid gap-5 lg:grid-cols-2">
+          <TurnoForm ayudantes={ayudantes} bloques={bloquesTurno} />
+          <ClaseForm bloques={bloques} />
+        </div>
+      ) : (
+        <p className="card px-4 py-3 text-sm text-muted">
+          El horario y los turnos los edita el encargado.
+        </p>
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   AlertTriangle, ArrowRight, Boxes, CalendarClock, Clock, DoorOpen, GraduationCap,
-  PackageCheck, UserCheck,
+  MessageSquare, PackageCheck, UserCheck,
 } from "lucide-react";
 import { estadoAhora, formatoEspera } from "@/lib/queries/horario";
 import { listarPrestamos, resumenPrestamos } from "@/lib/queries/prestamos";
@@ -10,6 +10,10 @@ import { DIAS } from "@/lib/types";
 import { Pill } from "@/components/ui";
 import { Foto } from "@/components/Foto";
 import { parseFecha } from "@/lib/db";
+import { desdeElUltimoTurno, incidenciasPendientes } from "@/lib/queries/novedades";
+import { ayudanteEnTurno, encargadoEnTurno } from "@/lib/session";
+import { BorrarNota, MarcarVista, NotaTurnoForm } from "@/components/Bitacora";
+import { DevolverRapido } from "@/components/AccionesPrestamo";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +52,10 @@ export default async function Panel() {
   const rp = resumenPrestamos();
   const ri = resumenInventario();
   const activos = listarPrestamos({ estado: "activo", limite: 8 });
+  const yo = await ayudanteEnTurno();
+  const encargado = await encargadoEnTurno();
+  const resumen = desdeElUltimoTurno();
+  const incidencias = incidenciasPendientes();
 
   // Quien abrió el turno puede no ser el del horario: eso es un reemplazo.
   const programados = e.turno?.franja.ayudantes.map((a) => a.persona) ?? [];
@@ -68,6 +76,31 @@ export default async function Panel() {
           <Link href="/inventario/nuevo" className="btn btn-ghost">Agregar ítem</Link>
         </div>
       </div>
+
+      {incidencias.length > 0 && (
+        <section className="card border-red-200 bg-red-50/60">
+          <div className="flex items-center gap-2 border-b border-red-200 px-4 py-2">
+            <AlertTriangle size={16} className="text-danger" aria-hidden />
+            <h2 className="font-semibold text-red-900">
+              {incidencias.length} {incidencias.length === 1 ? "incidencia" : "incidencias"} sin revisar
+            </h2>
+          </div>
+          <ul className="divide-y divide-red-200">
+            {incidencias.map((n) => (
+              <li key={n.id} className="flex flex-wrap items-center gap-3 px-4 py-2 text-sm">
+                <span className="flex-1 text-red-900">{n.texto}</span>
+                <span className="text-xs text-red-700">{n.creado_en.slice(0, 16)}</span>
+                {encargado && <MarcarVista id={n.id} />}
+              </li>
+            ))}
+          </ul>
+          {!encargado && (
+            <p className="px-4 py-2 text-xs text-red-700">
+              Solo el encargado puede darlas por revisadas.
+            </p>
+          )}
+        </section>
+      )}
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Metrica icono={PackageCheck} valor={rp.activos} etiqueta="Préstamos activos" href="/prestamos" />
@@ -200,6 +233,60 @@ export default async function Panel() {
         </Tarjeta>
       </section>
 
+      {/* -------------------------------------------------- bitácora */}
+      <section className="card">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3">
+          <h2 className="flex items-center gap-2 font-semibold">
+            <MessageSquare size={16} className="text-brand" aria-hidden />
+            Desde el último turno
+          </h2>
+          <p className="text-xs text-muted">
+            {resumen.turnoAnterior
+              ? `Cerró ${resumen.turnoAnterior} · ${resumen.desde.slice(0, 16)}`
+              : "Todavía no hay turnos cerrados"}
+            {" · "}
+            {resumen.salidas} salida(s), {resumen.devoluciones} devolución(es)
+          </p>
+        </div>
+
+        <div className="space-y-4 p-4">
+          <NotaTurnoForm puedeEscribir={!!yo} />
+
+          {resumen.novedades.length === 0 ? (
+            <p className="text-sm text-muted">
+              Nadie ha dejado recados desde el último turno.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {resumen.novedades.map((n) => (
+                <li
+                  key={n.id}
+                  className={`rounded-lg border px-3 py-2 ${
+                    n.tipo === "incidencia"
+                      ? "border-amber-200 bg-amber-50"
+                      : "border-line bg-slate-50"
+                  }`}
+                >
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-sm font-medium">
+                      {n.persona ?? "Sistema"}
+                    </span>
+                    <span className="text-xs text-muted">{n.creado_en.slice(5, 16)}</span>
+                    {n.tipo === "incidencia" && (
+                      <Pill tono="aviso">incidencia</Pill>
+                    )}
+                    {yo && n.persona_id === yo.id && n.tipo === "nota" && (
+                      <span className="ml-auto"><BorrarNota id={n.id} /></span>
+                    )}
+                  </div>
+                  <p className="text-sm whitespace-pre-line">{n.texto}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+
       {/* --------------------------------------------- prestados ahora */}
       <section className="card">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
@@ -238,7 +325,10 @@ export default async function Panel() {
                     </p>
                     {p.atrasado ? <Pill tono="peligro">Atrasado</Pill> : <Pill tono="ok">Al día</Pill>}
                   </div>
-                  <Link href={`/prestamos/${p.id}`} className="btn btn-ghost">Devolver</Link>
+                  <div className="flex gap-2">
+                    <DevolverRapido prestamoId={p.id} etiqueta="Devolver" />
+                    <Link href={`/prestamos/${p.id}`} className="btn btn-ghost">Ver</Link>
+                  </div>
                 </li>
               );
             })}

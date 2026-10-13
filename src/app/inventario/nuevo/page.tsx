@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { ItemForm } from "@/components/ItemForm";
+import { listarPersonas } from "@/lib/queries/personas";
 import { listarCategorias, listarUbicaciones, siguienteCodigo } from "@/lib/queries/items";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +21,7 @@ export default function NuevoItem() {
       <ItemForm
         categorias={listarCategorias()}
         ubicaciones={listarUbicaciones()}
+        docentes={listarPersonas({ rol: "docente" })}
         codigoSugerido={siguienteCodigo()}
       />
     </div>

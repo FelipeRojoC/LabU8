@@ -74,3 +74,19 @@ export async function cerrarTurno() {
   }
   c.delete(COOKIE);
 }
+
+/**
+ * El encargado puede anular préstamos y editar el horario y los turnos.
+ * Hoy es una sola persona; se marca en la pantalla de Personas.
+ */
+export async function encargadoEnTurno(): Promise<Persona | null> {
+  const p = await ayudanteEnTurno();
+  return p?.es_encargado ? p : null;
+}
+
+/** Lanza si quien está en turno no es el encargado. Para usar en las acciones. */
+export async function exigirEncargado(): Promise<Persona> {
+  const p = await encargadoEnTurno();
+  if (!p) throw new Error("Esto lo puede hacer solo el encargado. Habla con él.");
+  return p;
+}

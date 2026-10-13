@@ -21,8 +21,8 @@ function crear(): Database.Database {
   db.pragma("journal_mode = WAL");
   db.pragma("foreign_keys = ON");
   const schema = fs.readFileSync(path.join(process.cwd(), "db", "schema.sql"), "utf8");
+  migrar(db, schema);   // adapta tablas viejas antes de aplicar el esquema
   db.exec(schema);
-  migrar(db, schema);
 
   // SQLite compara acentos literalmente: sin esto "multi" no encuentra
   // "Multímetro". Se expone como función SQL para usarla en los LIKE.
