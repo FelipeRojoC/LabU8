@@ -1,0 +1,37 @@
+# /etc/systemd/system/labu8.service
+[Unit]
+Description=Laboratorio de Electrotecnia U8 — inventario y préstamos
+After=network.target
+
+[Service]
+Type=simple
+User=labu8
+Group=labu8
+WorkingDirectory=/opt/labu8
+
+Environment=NODE_ENV=production
+Environment=PORT=3000
+# Solo escucha en localhost: quien expone el servicio es nginx.
+Environment=HOSTNAME=127.0.0.1
+# Base de datos y fotos. Es el único directorio que hay que respaldar.
+Environment=LABU8_DATA_DIR=/var/lib/labu8
+# Los turnos y los plazos de préstamo se calculan en hora local.
+Environment=TZ=America/Santiago
+
+ExecStart=/usr/bin/npm start
+Restart=always
+RestartSec=5
+
+# Endurecimiento básico
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+# Next escribe su caché dentro del proyecto; los datos van aparte.
+ReadWritePaths=/var/lib/labu8 /opt/labu8/.next
+
+[Install]
+WantedBy=multi-user.target

@@ -100,23 +100,21 @@ turno abierto por una persona de otro.
 
 ## Puesta en el servidor UCN
 
-La aplicación no asume nada del entorno salvo Node 20+.
+La guía completa —qué pedirle a informática, instalación, systemd, nginx,
+respaldo y qué falta decidir en seguridad— está en **[DESPLIEGUE.md](DESPLIEGUE.md)**,
+con los archivos de servicio listos en [`deploy/`](deploy).
+
+En corto: la aplicación no asume nada del entorno salvo Node 20+.
 
 ```bash
-# en el servidor
-git clone <repo> && cd labu8
+git clone https://github.com/FelipeRojoC/LabU8.git labu8 && cd labu8
 npm ci
 npm run build
 LABU8_DATA_DIR=/var/lib/labu8 npm start   # escucha en :3000
 ```
 
-- `LABU8_DATA_DIR` define dónde viven la base y las fotos. Apunta a un directorio
-  con respaldo; es lo único que hay que respaldar.
-- Detrás de nginx/Apache: proxy inverso a `localhost:3000`.
-- Como servicio: una unidad `systemd` con `ExecStart=/usr/bin/npm start`,
-  `WorkingDirectory=` en la carpeta del proyecto y `Environment=LABU8_DATA_DIR=…`.
-- Respaldo: `sqlite3 /var/lib/labu8/labu8.db ".backup copia.db"` más una copia de
-  `/var/lib/labu8/uploads`.
+`LABU8_DATA_DIR` define dónde viven la base y las fotos: es el único directorio
+que hay que respaldar.
 
 ### Si más adelante se necesita PostgreSQL
 
@@ -124,12 +122,6 @@ Reemplazar `src/lib/db.ts` por un cliente `pg` y traducir `src/lib/queries/`:
 los cambios son los parámetros con nombre (`@x` → `$1`), `AUTOINCREMENT` →
 `GENERATED ... AS IDENTITY`, `datetime('now','localtime')` → `now()` y
 `COLLATE NOCASE` → `lower()`. Las páginas y acciones no cambian.
-
-### Autenticación
-
-Hoy el acceso es por PIN de ayudante, pensado para un computador dentro del
-laboratorio. Si el sistema queda expuesto en la red de la universidad, conviene
-ponerlo detrás del inicio de sesión institucional antes de abrirlo.
 
 ## Aspecto
 
