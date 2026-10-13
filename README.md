@@ -1,36 +1,144 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Laboratorio de Electrotecnia U8 — Inventario y préstamos
 
-## Getting Started
+Sistema local para el laboratorio: inventario con fotos, registro de salidas y
+devoluciones, y el horario de clases con los turnos de los ayudantes.
 
-First, run the development server:
+## Cómo levantarlo
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run seed      # bloques, horario de clases, categorías e inventario base
+npm run dev       # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Para producción local o en el servidor:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build
+npm start
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`npm run reset` vacía la base y vuelve a cargar la semilla (borra los préstamos).
 
-## Learn More
+## Cómo se usa
 
-To learn more about Next.js, take a look at the following resources:
+1. **Abrir turno** (arriba a la derecha). El ayudante elige su nombre y escribe su
+   PIN. Queda registrado como quien entrega y quien recibe cada equipo, y se
+   guarda la hora real de inicio. Al cerrar el turno se guarda la de término.
+2. **Registrar salida** (`/prestamos/nuevo`): buscar los equipos, indicar quién se
+   los lleva y cuándo los devuelve. Si la persona no está en la lista, se crea ahí
+   mismo con «Es alguien nuevo».
+3. **Devolución** (`/prestamos/[id]`): se puede devolver todo o solo una parte.
+   Cada línea se marca como *buen estado*, *dañado* (el equipo pasa a
+   mantenimiento) o *perdido* (se descuenta del stock).
+4. **Inventario** (`/inventario`): el catálogo va creciendo con «Agregar ítem».
+   Desde el celular el botón de foto abre la cámara directamente. Las categorías
+   y ubicaciones nuevas se crean desde el mismo formulario.
+5. **Horario** (`/horario`): dos tablas separadas, porque los ayudantes tienen su
+   propia grilla — entran a las 8:00, antes de que empiecen las clases a las 8:10.
+   Arriba los turnos de ayudantes (T1–T7), abajo las clases (bloques A–G). El
+   panel de inicio usa ambas para mostrar qué pasa ahora y quién viene después.
+6. **Registro de turnos** (`/registro`): quién abrió, a qué hora, cuántos bloques
+   cubrió y cuántas horas suma en el mes. Las horas se cuentan contra la apertura
+   real, no contra el horario, así que **un reemplazo queda a nombre de quien
+   efectivamente abrió** y aparece marcado como tal. También lista los bloques
+   del horario que el titular no abrió y quién los cubrió.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Ayudantes y PIN inicial
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Los seis ayudantes del horario vienen cargados con un PIN inicial distinto cada
+uno, definido en `scripts/seed.mjs` (constante `AYUDANTES`). Cámbialos en
+`/personas` antes de usar el sistema en serio: el PIN es lo único que separa un
+turno abierto por una persona de otro.
 
-## Deploy on Vercel
+### Cómo se cuentan las horas
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Un bloque cuenta cuando el turno lo cubre al menos 15 minutos. Abrir cinco
+  minutos antes de que termine un bloque ajeno no lo convierte en trabajado.
+- Un bloque se cuenta **completo** aunque la apertura haya sido más tarde. El
+  atraso queda registrado aparte, solo como información.
+- Un turno muy corto igual suma el bloque en que se abrió, nunca cero.
+- Si alguien olvida cerrar, solo cuenta el bloque de apertura y aparece como
+  «sin cerrar», con un campo para completar la hora real de término.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Estructura
+
+| Ruta | Qué hace |
+| --- | --- |
+| `db/schema.sql` | Esquema completo de la base |
+| `scripts/seed.mjs` | Carga inicial (horario, categorías, inventario base) |
+| `src/lib/db.ts` | Conexión SQLite, bitácora, utilidades de fecha |
+| `src/lib/queries/` | Consultas: `items`, `prestamos`, `personas`, `horario`, `turnos` |
+| `src/lib/migrar.mjs` | Cambios de forma sobre bases ya creadas (lo usan app y seed) |
+| `src/actions/` | Server actions (todas las escrituras pasan por aquí) |
+| `src/app/` | Páginas |
+| `data/` | Base de datos y fotos — **no** se versiona |
+
+### Decisiones
+
+- **Next.js 16 + server actions**: un solo proceso, sin API separada que mantener.
+- **SQLite con `better-sqlite3`**: un archivo, sin servicio de base de datos que
+  administrar. Las consultas son SQL plano en `src/lib/queries/`, así que migrar
+  a PostgreSQL es reescribir esa carpeta, no la aplicación.
+- **Stock calculado, no almacenado**: `disponible = cantidad_total − prestado`,
+  donde *prestado* se suma desde los préstamos activos. No hay contador que se
+  pueda desincronizar.
+- **Validación dentro de la transacción** al crear un préstamo: si dos ayudantes
+  registran la salida del mismo equipo a la vez, el segundo recibe un error en
+  lugar de dejar el stock negativo.
+- **Fotos fuera de `public/`**: viven en `data/uploads` y se sirven por
+  `/api/fotos/[nombre]`, para que subir una foto no dependa del build.
+- **Búsquedas sin tildes**: `multi` encuentra `Multímetro`, en la base y en el
+  buscador del formulario.
+- **Dos grillas horarias separadas**: la de ayudantes (T1–T7, desde las 8:00) y
+  la de clases (A–G, desde las 8:10) no calzan, así que no comparten tabla.
+- **Turno programado vs. turno real**: `turnos` es el horario oficial;
+  `sesiones_turno` es lo que pasó. De la diferencia entre ambos salen los
+  reemplazos, y de las horas cubiertas sale el resumen mensual.
+- **«Estar en turno» es tener sesión abierta hoy**, no solo tener la cookie: la
+  cabecera y el registro leen del mismo dato y no pueden contradecirse.
+
+## Puesta en el servidor UCN
+
+La aplicación no asume nada del entorno salvo Node 20+.
+
+```bash
+# en el servidor
+git clone <repo> && cd labu8
+npm ci
+npm run build
+LABU8_DATA_DIR=/var/lib/labu8 npm start   # escucha en :3000
+```
+
+- `LABU8_DATA_DIR` define dónde viven la base y las fotos. Apunta a un directorio
+  con respaldo; es lo único que hay que respaldar.
+- Detrás de nginx/Apache: proxy inverso a `localhost:3000`.
+- Como servicio: una unidad `systemd` con `ExecStart=/usr/bin/npm start`,
+  `WorkingDirectory=` en la carpeta del proyecto y `Environment=LABU8_DATA_DIR=…`.
+- Respaldo: `sqlite3 /var/lib/labu8/labu8.db ".backup copia.db"` más una copia de
+  `/var/lib/labu8/uploads`.
+
+### Si más adelante se necesita PostgreSQL
+
+Reemplazar `src/lib/db.ts` por un cliente `pg` y traducir `src/lib/queries/`:
+los cambios son los parámetros con nombre (`@x` → `$1`), `AUTOINCREMENT` →
+`GENERATED ... AS IDENTITY`, `datetime('now','localtime')` → `now()` y
+`COLLATE NOCASE` → `lower()`. Las páginas y acciones no cambian.
+
+### Autenticación
+
+Hoy el acceso es por PIN de ayudante, pensado para un computador dentro del
+laboratorio. Si el sistema queda expuesto en la red de la universidad, conviene
+ponerlo detrás del inicio de sesión institucional antes de abrirlo.
+
+## Aspecto
+
+La interfaz está tematizada como electrónica: cabecera con textura de
+protoboard, fondo de pistas de circuito que se desplaza muy lento y cursor con
+forma de resistencia. Todo es CSS —`src/app/globals.css`— y solo se animan
+propiedades que resuelve el compositor, así que no pesa. Los controles conservan
+su cursor de siempre para no estorbar el uso, y con
+`prefers-reduced-motion` las animaciones se apagan solas.
+
+Los colores salen de variables en `:root` (`--brand`, `--brand-soft`,
+`--brand-fuerte`): cambiar la paleta completa es cambiar esas tres líneas.
