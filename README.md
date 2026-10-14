@@ -26,9 +26,11 @@ npm start
    PIN. Queda registrado como quien entrega y quien recibe cada equipo, y se
    guarda la hora real de inicio. Al cerrar el turno se guarda la de término.
 2. **Panel**: lo primero que se ve es qué pasó desde el último turno —cuántas
-   salidas y devoluciones hubo— y los **recados que dejaron los ayudantes
-   anteriores**. Cualquiera en turno puede dejar el suyo. Arriba de todo
-   aparecen las incidencias que el encargado todavía no revisa.
+   salidas y devoluciones hubo— y la **bitácora**: los recados que se han ido
+   dejando entre ayudantes. Queda guardada y la ve cualquiera que entre, esté o
+   no de turno; escribir sí requiere turno abierto. En `/bitacora` está el
+   historial completo. Arriba de todo aparecen las incidencias que el encargado
+   todavía no revisa.
 3. **Registrar salida** (`/prestamos/nuevo`): se buscan los equipos, se busca a
    la persona **por nombre o RUT** y se escribe la fecha de devolución (siempre
    obligatoria, sin valor sugerido). Si la persona no existe se crea ahí mismo,
@@ -48,8 +50,10 @@ npm start
    resto, pero siempre queda claro de quién es y quién se lo llevó.
 7. **Horario** (`/horario`): dos tablas separadas, porque los ayudantes tienen su
    propia grilla — entran a las 8:00, antes de que empiecen las clases a las 8:10.
-   Arriba los turnos de ayudantes (T1–T7), abajo las clases (bloques A–G). El
-   panel usa ambas para mostrar qué pasa ahora y quién viene después.
+   Arriba los turnos de ayudantes (A, B, C, ALMUERZO, D, E, F), abajo las clases
+   (bloques A–G). Las letras se repiten entre las dos tablas a propósito, porque
+   así se habla en el laboratorio; al lado de cada una va su horario, que es lo
+   que las distingue. El bloque en curso se marca en verde.
 8. **Registro de turnos** (`/registro`): quién abrió, a qué hora, cuántos bloques
    cubrió y cuántas horas suma en el mes. Las horas se cuentan contra la apertura
    real, no contra el horario, así que **un reemplazo queda a nombre de quien
@@ -144,6 +148,9 @@ turno abierto por una persona de otro.
 - **Nada se borra**: un préstamo mal registrado se *anula* —queda con quién lo
   anuló y por qué, y libera el stock—, y un equipo que ya no está se da de baja.
   El historial siempre se puede reconstruir.
+- **La bitácora es histórica, no por turno**: el resumen «desde el último
+  turno» solo marca qué parte es nueva; los mensajes no se borran ni se ocultan
+  al cerrar el turno.
 - **Un consumible se entrega, no se presta**: baja del stock en el momento y la
   línea nace saldada, para que no quede eternamente como pendiente de devolución.
 

@@ -10,9 +10,12 @@ import { DIAS } from "@/lib/types";
 import { Pill } from "@/components/ui";
 import { Foto } from "@/components/Foto";
 import { parseFecha } from "@/lib/db";
-import { desdeElUltimoTurno, incidenciasPendientes } from "@/lib/queries/novedades";
+import {
+  contarNovedades, desdeElUltimoTurno, incidenciasPendientes, listarNovedades,
+} from "@/lib/queries/novedades";
 import { ayudanteEnTurno, encargadoEnTurno } from "@/lib/session";
-import { BorrarNota, MarcarVista, NotaTurnoForm } from "@/components/Bitacora";
+import { MarcarVista, NotaTurnoForm } from "@/components/Bitacora";
+import { ListaNovedades } from "@/components/ListaNovedades";
 import { DevolverRapido } from "@/components/AccionesPrestamo";
 
 export const dynamic = "force-dynamic";
@@ -56,6 +59,8 @@ export default async function Panel() {
   const encargado = await encargadoEnTurno();
   const resumen = desdeElUltimoTurno();
   const incidencias = incidenciasPendientes();
+  const novedades = listarNovedades(12);
+  const totalNovedades = contarNovedades();
 
   // Quien abrió el turno puede no ser el del horario: eso es un reemplazo.
   const programados = e.turno?.franja.ayudantes.map((a) => a.persona) ?? [];
@@ -238,51 +243,25 @@ export default async function Panel() {
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3">
           <h2 className="flex items-center gap-2 font-semibold">
             <MessageSquare size={16} className="text-brand" aria-hidden />
-            Desde el último turno
+            Bitácora del laboratorio
           </h2>
           <p className="text-xs text-muted">
             {resumen.turnoAnterior
-              ? `Cerró ${resumen.turnoAnterior} · ${resumen.desde.slice(0, 16)}`
+              ? `Último cierre: ${resumen.turnoAnterior}, ${resumen.desde.slice(0, 16)}`
               : "Todavía no hay turnos cerrados"}
             {" · "}
             {resumen.salidas} salida(s), {resumen.devoluciones} devolución(es)
+            {resumen.nuevas > 0 && `, ${resumen.nuevas} mensaje(s) nuevos`}
           </p>
         </div>
 
         <div className="space-y-4 p-4">
           <NotaTurnoForm puedeEscribir={!!yo} />
-
-          {resumen.novedades.length === 0 ? (
-            <p className="text-sm text-muted">
-              Nadie ha dejado recados desde el último turno.
-            </p>
-          ) : (
-            <ul className="space-y-2">
-              {resumen.novedades.map((n) => (
-                <li
-                  key={n.id}
-                  className={`rounded-lg border px-3 py-2 ${
-                    n.tipo === "incidencia"
-                      ? "border-amber-200 bg-amber-50"
-                      : "border-line bg-slate-50"
-                  }`}
-                >
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-sm font-medium">
-                      {n.persona ?? "Sistema"}
-                    </span>
-                    <span className="text-xs text-muted">{n.creado_en.slice(5, 16)}</span>
-                    {n.tipo === "incidencia" && (
-                      <Pill tono="aviso">incidencia</Pill>
-                    )}
-                    {yo && n.persona_id === yo.id && n.tipo === "nota" && (
-                      <span className="ml-auto"><BorrarNota id={n.id} /></span>
-                    )}
-                  </div>
-                  <p className="text-sm whitespace-pre-line">{n.texto}</p>
-                </li>
-              ))}
-            </ul>
+          <ListaNovedades novedades={novedades} desde={resumen.desde} yoId={yo?.id} />
+          {totalNovedades > novedades.length && (
+            <Link href="/bitacora" className="inline-flex text-sm text-brand hover:underline">
+              Ver la bitácora completa ({totalNovedades} mensajes) →
+            </Link>
           )}
         </div>
       </section>

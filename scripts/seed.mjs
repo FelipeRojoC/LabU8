@@ -22,7 +22,8 @@ db.exec(SCHEMA);
 if (RESET) {
   db.exec(`
     PRAGMA foreign_keys = OFF;
-    DELETE FROM bitacora; DELETE FROM prestamo_items; DELETE FROM prestamos;
+    DELETE FROM novedades; DELETE FROM bitacora;
+    DELETE FROM prestamo_items; DELETE FROM prestamos;
     DELETE FROM items; DELETE FROM sesiones_turno; DELETE FROM turnos;
     DELETE FROM clases; DELETE FROM categorias; DELETE FROM ubicaciones;
     DELETE FROM personas; DELETE FROM bloques; DELETE FROM bloques_turno;
@@ -118,14 +119,15 @@ const idAyudante = new Map(
   AYUDANTES.map(([n, pin]) => [n, persona(n, "ayudante", pin, "Ayudantía Electrotecnia")]),
 );
 
+// Los bloques de ayudantía, con los nombres que se usan en el laboratorio.
 const BLOQUES_TURNO = [
-  ["T1", "08:00", "09:45", 1],
-  ["T2", "09:45", "11:30", 2],
-  ["T3", "11:30", "13:15", 3],
-  ["T4", "13:15", "14:20", 4],
-  ["T5", "14:20", "16:05", 5],
-  ["T6", "16:05", "17:50", 6],
-  ["T7", "17:50", "19:35", 7],
+  ["A",        "08:00", "09:45", 1],
+  ["B",        "09:45", "11:30", 2],
+  ["C",        "11:30", "13:15", 3],
+  ["ALMUERZO", "13:15", "14:20", 4],
+  ["D",        "14:20", "16:05", 5],
+  ["E",        "16:05", "17:50", 6],
+  ["F",        "17:50", "19:35", 7],
 ];
 const insBloqueTurno = db.prepare(
   "INSERT INTO bloques_turno (codigo,inicio,termino,orden) VALUES (?,?,?,?) ON CONFLICT(codigo) DO UPDATE SET inicio=excluded.inicio, termino=excluded.termino, orden=excluded.orden",
@@ -135,13 +137,13 @@ for (const b of BLOQUES_TURNO) insBloqueTurno.run(...b);
 // Una fila por bloque: [Lunes, Martes, Miércoles, Jueves, Viernes]
 // null = ese bloque no tiene ayudante asignado.
 const GRILLA_TURNOS = {
-  T1: ["Vicente",  "Guillermo", "Nicole",    "Nicole",  "Dayris"],
-  T2: ["Vicente",  "Nicole",    "Nicole",    null,      "Adrian"],
-  T3: ["Dayris",   "Vicente",   "Nicole",    "Adriana", "Vicente"],
-  T4: ["Adriana",  "Adrian",    "Adrian",    "Adriana", "Adriana"],
-  T5: ["Adriana",  "Dayris",    "Guillermo", "Adrian",  "Adriana"],
-  T6: ["Guillermo","Adrian",    "Dayris",    "Adrian",  "Adriana"],
-  T7: ["Vicente",  "Adriana",   "Dayris",    "Adriana", "Adriana"],
+  A:        ["Vicente",   "Guillermo", "Nicole",    "Nicole",  "Dayris"],
+  B:        ["Vicente",   "Nicole",    "Nicole",    null,      "Adrian"],
+  C:        ["Dayris",    "Vicente",   "Nicole",    "Adriana", "Vicente"],
+  ALMUERZO: ["Adriana",   "Adrian",    "Adrian",    "Adriana", "Adriana"],
+  D:        ["Adriana",   "Dayris",    "Guillermo", "Adrian",  "Adriana"],
+  E:        ["Guillermo", "Adrian",    "Dayris",    "Adrian",  "Adriana"],
+  F:        ["Vicente",   "Adriana",   "Dayris",    "Adriana", "Adriana"],
 };
 const insTurno = db.prepare("INSERT OR IGNORE INTO turnos (persona_id,dia,bloque) VALUES (?,?,?)");
 let nTurnos = 0;

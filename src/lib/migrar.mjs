@@ -40,6 +40,21 @@ export function migrar(db, schema) {
     db.exec("DROP TABLE turnos;");
   }
 
+  // Los bloques de turno se llamaban T1..T7, pero en el laboratorio se habla
+  // de A, B, C, almuerzo, D, E y F. Se renombran manteniendo los turnos.
+  const hayBloquesTurno = db
+    .prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='bloques_turno'")
+    .get();
+  if (hayBloquesTurno && db.prepare("SELECT 1 FROM bloques_turno WHERE codigo='T1'").get()) {
+    const MAPA = { T1: "A", T2: "B", T3: "C", T4: "ALMUERZO", T5: "D", T6: "E", T7: "F" };
+    db.exec("PRAGMA foreign_keys=OFF;");
+    for (const [viejo, nuevo] of Object.entries(MAPA)) {
+      db.prepare("UPDATE bloques_turno SET codigo = ? WHERE codigo = ?").run(nuevo, viejo);
+      db.prepare("UPDATE turnos SET bloque = ? WHERE bloque = ?").run(nuevo, viejo);
+    }
+    db.exec("PRAGMA foreign_keys=ON;");
+  }
+
   // El estado 'cancelado' pasó a llamarse 'anulado' y se agregó quién anuló y
   // por qué. Cambiar un CHECK obliga a rehacer la tabla conservando los datos.
   if (sqlDe(db, "prestamos").includes("'cancelado'")) {

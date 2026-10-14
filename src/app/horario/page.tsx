@@ -58,8 +58,13 @@ export default async function Horario() {
                 const enCurso = ahora.turno?.franja.bloque.codigo === b.codigo;
                 return (
                   <tr key={b.codigo} className="border-t border-line align-top">
-                    <th scope="row" className={`px-2 py-2 text-left ${enCurso ? "bg-brand-soft" : "bg-slate-50"}`}>
-                      <span className="block font-semibold">{b.codigo}</span>
+                    <th
+                      scope="row"
+                      className={`px-2 py-2 text-left ${
+                        enCurso ? "bg-green-100 text-green-900" : "bg-slate-50"
+                      }`}
+                    >
+                      <span className="block text-sm font-semibold">{b.codigo}</span>
                       <span className="font-mono text-xs font-normal text-muted">
                         {b.inicio}–{b.termino}
                       </span>
@@ -68,7 +73,17 @@ export default async function Horario() {
                       const ts = turnos.filter((t) => t.dia === d && t.bloque === b.codigo);
                       const actual = enCurso && d === ahora.dia;
                       return (
-                        <td key={d} className={`min-w-32 px-2 py-2 ${actual ? "bg-brand-soft/60" : ""}`}>
+                        <td
+                          key={d}
+                          className={`min-w-32 px-2 py-2 ${
+                            actual ? "bg-green-100 ring-2 ring-green-500 ring-inset" : ""
+                          }`}
+                        >
+                          {actual && (
+                            <p className="mb-1 text-[10px] font-semibold tracking-wide text-green-800 uppercase">
+                              ● Turno actual
+                            </p>
+                          )}
                           <div className="space-y-1.5">
                             {ts.map((t) => (
                               <div key={t.id} className="group relative rounded-md border border-violet-200 bg-violet-50 px-2 py-1">
@@ -117,7 +132,12 @@ export default async function Horario() {
                 const enCurso = ahora.clase?.franja.bloque.codigo === b.codigo;
                 return (
                   <tr key={b.codigo} className="border-t border-line align-top">
-                    <th scope="row" className={`px-2 py-2 text-left ${enCurso ? "bg-brand-soft" : "bg-slate-50"}`}>
+                    <th
+                      scope="row"
+                      className={`px-2 py-2 text-left ${
+                        enCurso ? "bg-green-100 text-green-900" : "bg-slate-50"
+                      }`}
+                    >
                       <span className="block font-semibold">{b.codigo}</span>
                       <span className="font-mono text-xs font-normal text-muted">
                         {b.inicio}–{b.termino}
@@ -127,7 +147,17 @@ export default async function Horario() {
                       const cs = clases.filter((c) => c.dia === d && c.bloque === b.codigo);
                       const actual = enCurso && d === ahora.dia;
                       return (
-                        <td key={d} className={`min-w-40 px-2 py-2 ${actual ? "bg-brand-soft/60" : ""}`}>
+                        <td
+                          key={d}
+                          className={`min-w-40 px-2 py-2 ${
+                            actual ? "bg-green-100 ring-2 ring-green-500 ring-inset" : ""
+                          }`}
+                        >
+                          {actual && (
+                            <p className="mb-1 text-[10px] font-semibold tracking-wide text-green-800 uppercase">
+                              ● En curso
+                            </p>
+                          )}
                           <div className="space-y-1.5">
                             {cs.map((c) => (
                               <div key={c.id} className={`group relative rounded-md border px-2 py-1.5 ${TONO[c.tipo]}`}>
@@ -158,6 +188,7 @@ export default async function Horario() {
           <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded border border-red-200 bg-red-50" /> Clase</span>
           <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded border border-teal-200 bg-teal-50" /> Laboratorio</span>
           <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded border border-slate-300 bg-slate-100" /> Protegido</span>
+          <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded border border-green-500 bg-green-100" /> Ahora mismo</span>
         </div>
       </section>
 

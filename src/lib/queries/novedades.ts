@@ -21,6 +21,9 @@ export function listarNovedades(limite = 30): Novedad[] {
   return db.prepare(`${SELECT} ORDER BY n.id DESC LIMIT ?`).all(limite) as Novedad[];
 }
 
+export const contarNovedades = (): number =>
+  (db.prepare("SELECT COUNT(*) AS n FROM novedades").get() as { n: number }).n;
+
 /** Incidencias que el encargado todavía no marca como vistas. */
 export function incidenciasPendientes(): Novedad[] {
   return db.prepare(
@@ -59,8 +62,9 @@ export function borrarNota(id: number, personaId: number) {
 }
 
 /**
- * Resumen de lo que pasó desde el último turno cerrado: con qué se encuentra
- * el ayudante que recién llega.
+ * Con qué se encuentra el ayudante que recién llega: cuánto se movió desde el
+ * último turno cerrado. La bitácora en sí NO se recorta por esta fecha —es
+ * histórica y la ven todos—; esto solo marca qué parte es nueva.
  */
 export function desdeElUltimoTurno() {
   const ultimo = db.prepare(
@@ -79,15 +83,15 @@ export function desdeElUltimoTurno() {
     `SELECT COUNT(*) AS n FROM prestamos
      WHERE devuelto_en IS NOT NULL AND datetime(devuelto_en) >= datetime(?)`,
   ).get(desde) as { n: number };
-  const novedades = db.prepare(
-    `${SELECT} WHERE datetime(n.creado_en) >= datetime(?) ORDER BY n.id DESC`,
-  ).all(desde) as Novedad[];
+  const nuevas = db.prepare(
+    "SELECT COUNT(*) AS n FROM novedades WHERE datetime(creado_en) >= datetime(?)",
+  ).get(desde) as { n: number };
 
   return {
     desde,
     turnoAnterior: ultimo?.persona ?? null,
     salidas: salidas.n,
     devoluciones: devoluciones.n,
-    novedades,
+    nuevas: nuevas.n,
   };
 }

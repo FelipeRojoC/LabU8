@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  ArrowLeftRight, Boxes, CalendarClock, ClipboardList, LayoutDashboard, Users,
+  ArrowLeftRight, Boxes, CalendarClock, ClipboardList, LayoutDashboard,
+  MessageSquare, Users,
 } from "lucide-react";
 
 const LINKS = [
@@ -11,6 +12,7 @@ const LINKS = [
   { href: "/inventario", label: "Inventario", icon: Boxes },
   { href: "/prestamos", label: "Préstamos", icon: ArrowLeftRight },
   { href: "/horario", label: "Horario", icon: CalendarClock },
+  { href: "/bitacora", label: "Bitácora", icon: MessageSquare },
   { href: "/registro", label: "Registro de turnos", icon: ClipboardList },
   { href: "/personas", label: "Personas", icon: Users },
 ];
