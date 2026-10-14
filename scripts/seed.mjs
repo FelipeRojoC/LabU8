@@ -108,8 +108,9 @@ const AYUDANTES = [
   ["Adriana",   "2105"],
   ["Adrian",    "2106"],
 ];
-// Encargado del laboratorio: el único que puede anular préstamos y tocar el
-// horario. Cambia el nombre y el PIN desde /personas.
+// Encargados del laboratorio: los únicos que pueden anular préstamos y tocar
+// el horario. Cambia los nombres y los PIN desde /personas.
+persona("Way", "ayudante", "123", "Encargada del laboratorio", null, 1);
 persona("Felipe Rojo", "ayudante", "9090", "Encargado del laboratorio",
         "felipe.rojo@alumnos.ucn.cl", 1);
 
