@@ -42,6 +42,7 @@ export default async function Inventario({
   const duenos = listarDuenos();
   const resumen = resumenInventario();
   const encargado = await encargadoEnTurno();
+  const hayFiltro = Object.values(sp).some(Boolean);
 
   return (
     <div className="space-y-5">
@@ -49,7 +50,11 @@ export default async function Inventario({
         <div>
           <h1 className="text-2xl font-semibold">Inventario</h1>
           <p className="text-sm text-muted">
-            {resumen.tipos} tipos · {resumen.unidades} unidades · {resumen.prestadas} fuera del laboratorio
+            {/* Con filtro manda lo que se está viendo, no el total del laboratorio. */}
+            {hayFiltro
+              ? `${items.length} de ${resumen.tipos} tipos`
+              : `${resumen.tipos} tipos · ${resumen.unidades} unidades`}
+            {" · "}{resumen.prestadas} fuera del laboratorio
           </p>
         </div>
         {encargado && (
