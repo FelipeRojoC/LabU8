@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft, Settings } from "lucide-react";
 import { historialItem, obtenerItem } from "@/lib/queries/items";
 import { listarPrestamos } from "@/lib/queries/prestamos";
+import { encargadoEnTurno } from "@/lib/session";
 import { Foto } from "@/components/Foto";
 import { Pill } from "@/components/ui";
-import { AjusteStock, EliminarItem } from "@/components/AjusteStock";
 
 export const dynamic = "force-dynamic";
 
@@ -25,17 +25,20 @@ function Dato({ k, v }: { k: string; v: string | number | null | undefined }) {
   );
 }
 
+/** Ficha de consulta: la ve cualquiera, pero no se edita desde acá. */
 export default async function DetalleItem({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const item = obtenerItem(Number(id));
   if (!item) notFound();
 
-  const historial = historialItem(item.id);
-  // Préstamos activos que incluyen este ítem: quién lo tiene ahora mismo.
+  const encargado = await encargadoEnTurno();
+  const historial = historialItem(item.id, 15);
   const conEsteItem = listarPrestamos({ estado: "activo" }).filter((p) =>
     p.lineas.some((l) => l.item_id === item.id && l.cantidad > l.cantidad_devuelta),
   );
   const est = ESTADOS[item.estado];
+  const sePuedePrestar =
+    item.disponible > 0 && item.prestable === 1 && item.estado === "operativo";
 
   return (
     <div className="space-y-5">
@@ -47,12 +50,16 @@ export default async function DetalleItem({ params }: { params: Promise<{ id: st
           <h1 className="mt-1 text-2xl font-semibold">{item.nombre}</h1>
           <p className="font-mono text-sm text-muted">{item.codigo}</p>
         </div>
-        <div className="flex gap-2">
-          <Link href={`/inventario/${item.id}/editar`} className="btn btn-ghost">
-            <Pencil size={15} aria-hidden /> Editar
-          </Link>
-          {item.disponible > 0 && item.prestable === 1 && item.estado === "operativo" && (
-            <Link href={`/prestamos/nuevo?item=${item.id}`} className="btn btn-primary">Prestar</Link>
+        <div className="flex flex-wrap gap-2">
+          {encargado && (
+            <Link href={`/encargado/inventario/${item.id}`} className="btn btn-ghost">
+              <Settings size={15} aria-hidden /> Editar ficha
+            </Link>
+          )}
+          {sePuedePrestar && (
+            <Link href={`/prestamos/nuevo?item=${item.id}`} className="btn btn-primary">
+              Prestar
+            </Link>
           )}
         </div>
       </div>
@@ -77,12 +84,15 @@ export default async function DetalleItem({ params }: { params: Promise<{ id: st
               {!item.prestable && <Pill tono="aviso">Solo uso en laboratorio</Pill>}
               {item.consumible === 1 && <Pill>Consumible</Pill>}
             </div>
-            <hr className="border-line" />
-            <AjusteStock itemId={item.id} />
-          </div>
-
-          <div className="card p-4">
-            <EliminarItem itemId={item.id} nombre={item.nombre} />
+            {!sePuedePrestar && (
+              <p className="text-xs text-muted">
+                {item.disponible <= 0
+                  ? "No queda stock disponible."
+                  : item.estado !== "operativo"
+                    ? `Este ítem está ${item.estado} y no se puede prestar.`
+                    : "Este ítem no sale del laboratorio."}
+              </p>
+            )}
           </div>
         </div>
 
@@ -95,6 +105,10 @@ export default async function DetalleItem({ params }: { params: Promise<{ id: st
               <Dato k="Marca" v={item.marca} />
               <Dato k="Modelo" v={item.modelo} />
               <Dato k="N.º de serie" v={item.n_serie} />
+              <Dato
+                k="Precio"
+                v={item.precio === null ? null : `$${item.precio.toLocaleString("es-CL")}`}
+              />
               <Dato k="Actualizado" v={item.actualizado_en} />
             </dl>
             {item.descripcion && (
@@ -137,7 +151,7 @@ export default async function DetalleItem({ params }: { params: Promise<{ id: st
           )}
 
           <div className="card">
-            <h2 className="border-b border-line px-4 py-3 font-semibold">Movimientos</h2>
+            <h2 className="border-b border-line px-4 py-3 font-semibold">Movimientos recientes</h2>
             {historial.length === 0 ? (
               <p className="px-4 py-6 text-sm text-muted">Sin movimientos registrados.</p>
             ) : (

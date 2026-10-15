@@ -39,12 +39,15 @@ npm start
    volvió solo una parte o algo llegó dañado, se entra al préstamo y se marca
    línea por línea. «Dañado» manda el equipo a mantenimiento, «perdido» lo
    descuenta del stock, y **en los dos casos le avisa al encargado**.
-5. **Inventario** (`/inventario`): el catálogo crece con «Agregar ítem» (ficha
-   completa con foto) o con **«Carga rápida»**, pensada para recorrer un estante:
-   se fija la ubicación una vez y después es solo nombre, cantidad y Enter. Los
-   filtros se arman solos con lo que se va cargando —categoría, ubicación, marca,
-   dueño— y los atajos de arriba («12 sin foto», «5 sin ubicación») sirven para
-   ir cerrando el inventario de a poco sin perder el hilo.
+5. **Inventario** (`/inventario`): de consulta para todos. Se busca por nombre,
+   código, **categoría, ubicación, dueño o estado**, y el buscador sugiere
+   mientras se escribe: escribir «resi» ofrece primero la categoría Resistencias
+   entera y después los ítems sueltos. Los filtros se aplican solos al elegirlos,
+   sin botón de por medio.
+   **Modificar el inventario es solo del encargado**, en `/encargado/inventario`:
+   agregar, editar, subir fotos, ajustar stock y eliminar. Ahí también está la
+   «Carga rápida», pensada para recorrer un estante: se fija la ubicación una vez
+   y después es solo nombre, cantidad y Enter.
 6. **Material de docentes**: lo que un profesor deja guardado en los estantes
    entra ítem por ítem con su nombre en el campo «Dueño». Se presta igual que el
    resto, pero siempre queda claro de quién es y quién se lo llevó.
@@ -76,7 +79,8 @@ rápida» o «Agregar ítem».
 | | Ayudante | Encargado |
 | --- | :---: | :---: |
 | Prestar y recibir devoluciones | sí | sí |
-| Agregar y editar ítems | sí | sí |
+| Consultar el inventario | sí | sí |
+| Agregar, editar o borrar ítems, y subir fotos | no | sí |
 | Dejar recados en la bitácora | sí | sí |
 | Ver todo | sí | sí |
 | **Anular** un préstamo mal registrado | no | sí |

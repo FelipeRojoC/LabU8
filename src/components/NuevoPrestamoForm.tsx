@@ -43,11 +43,15 @@ export function NuevoPrestamoForm({
     const elegidos = new Set(lineas.map((l) => l.item_id));
     return items
       .filter((i) => !elegidos.has(i.id))
+      // Mismos campos que busca el inventario, para que los nombres y la forma
+      // de encontrar las cosas sean iguales en las dos pantallas.
       .filter(
         (i) =>
           !q ||
-          norm(`${i.nombre} ${i.codigo ?? ""} ${i.marca ?? ""} ${i.modelo ?? ""} ${i.categoria ?? ""}`)
-            .includes(q),
+          norm(
+            [i.nombre, i.codigo, i.marca, i.modelo, i.categoria, i.ubicacion, i.dueno]
+              .filter(Boolean).join(" "),
+          ).includes(q),
       )
       .slice(0, 8);
   }, [busqueda, items, lineas]);
@@ -81,7 +85,7 @@ export function NuevoPrestamoForm({
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
               className="input-base pl-8"
-              placeholder="Buscar equipo por nombre, código o marca…"
+              placeholder="nombre, código, categoría, ubicación…"
             />
           </div>
 
@@ -103,7 +107,8 @@ export function NuevoPrestamoForm({
                     <span className="flex-1">
                       <span className="block text-sm font-medium">{i.nombre}</span>
                       <span className="block text-xs text-muted">
-                        {i.codigo} · {i.disponible} disponibles{i.ubicacion ? ` · ${i.ubicacion}` : ""}
+                        {[i.codigo, i.categoria, i.ubicacion, `${i.disponible} disponibles`]
+                          .filter(Boolean).join(" · ")}
                       </span>
                     </span>
                     <Plus size={16} className="text-brand" aria-hidden />

@@ -31,7 +31,7 @@ export function ItemForm({
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (estado.ok && estado.id) router.push(`/inventario/${estado.id}`);
+    if (estado.ok && estado.id) router.push(`/encargado/inventario/${estado.id}`);
   }, [estado, router]);
 
   return (

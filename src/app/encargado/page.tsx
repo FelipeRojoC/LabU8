@@ -63,7 +63,7 @@ export default function Encargado() {
         <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">Gestión</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <Tarjeta
-            href="/inventario" icono={Boxes} titulo="Inventario"
+            href="/encargado/inventario" icono={Boxes} titulo="Inventario"
             detalle={`${ri.tipos} tipos · ${ri.unidades} unidades · ${ri.prestadas} fuera`}
           />
           <Tarjeta
@@ -102,7 +102,7 @@ export default function Encargado() {
           ] as const).map(([k, n, txt]) =>
             n > 0 ? (
               <Link
-                key={k} href={`/inventario?falta=${k}`}
+                key={k} href={`/encargado/inventario?falta=${k}`}
                 className="rounded-full border border-line px-3 py-1 hover:border-brand hover:text-brand"
               >
                 <MapPin size={12} className="mr-1 inline" aria-hidden />

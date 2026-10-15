@@ -20,6 +20,18 @@ migrar(db, SCHEMA);
 db.exec(SCHEMA);
 
 if (RESET) {
+  // Freno de mano: --reset borra TODO, incluida la bitácora y los préstamos.
+  // Si la base ya tiene actividad real hay que confirmarlo a propósito.
+  const actividad = ["prestamos", "sesiones_turno", "novedades"]
+    .filter((t) => db.prepare(`SELECT COUNT(*) AS n FROM ${t}`).get().n > 0);
+  if (actividad.length && !process.argv.includes("--si-estoy-seguro")) {
+    console.error(
+      `\n  ABORTADO: esta base ya tiene datos reales (${actividad.join(", ")}).\n` +
+      `  --reset los borra todos, incluida la bitácora.\n` +
+      `  Si de verdad quieres vaciarla:  npm run reset -- --si-estoy-seguro\n`,
+    );
+    process.exit(1);
+  }
   db.exec(`
     PRAGMA foreign_keys = OFF;
     DELETE FROM novedades; DELETE FROM bitacora;

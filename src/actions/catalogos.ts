@@ -57,3 +57,9 @@ export async function eliminarUbicacionAction(fd: FormData) {
   eliminarUbicacion(Number(fd.get("id")));
   revalidar();
 }
+
+/** Sugerencias del buscador del inventario (se llama mientras se escribe). */
+export async function sugerenciasAction(q: string) {
+  const { sugerencias } = await import("@/lib/queries/items");
+  return sugerencias(q);
+}

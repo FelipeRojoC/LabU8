@@ -41,9 +41,13 @@ export function listarItems(f: FiltroItems = {}): ItemVista[] {
   const args: Record<string, unknown> = {};
 
   if (f.q?.trim()) {
+    // Se busca por todo lo que el ayudante tiene en la cabeza: el nombre, pero
+    // también la categoría, dónde está guardado, de quién es o su estado.
     cond.push(`(sinacentos(i.nombre) LIKE @q OR sinacentos(i.codigo) LIKE @q
                 OR sinacentos(i.marca) LIKE @q OR sinacentos(i.modelo) LIKE @q
-                OR sinacentos(i.n_serie) LIKE @q OR sinacentos(i.descripcion) LIKE @q)`);
+                OR sinacentos(i.n_serie) LIKE @q OR sinacentos(i.descripcion) LIKE @q
+                OR sinacentos(c.nombre) LIKE @q OR sinacentos(u.nombre) LIKE @q
+                OR sinacentos(d.nombre) LIKE @q OR sinacentos(i.estado) LIKE @q)`);
     args.q = `%${sinAcentos(f.q.trim())}%`;
   }
   if (f.categoria_id) { cond.push("i.categoria_id = @categoria_id"); args.categoria_id = f.categoria_id; }
@@ -277,3 +281,74 @@ export const eliminarCategoria = (id: number) =>
 
 export const eliminarUbicacion = (id: number) =>
   db.prepare("DELETE FROM ubicaciones WHERE id = ?").run(id);
+
+// ------------------------------------------------- sugerencias del buscador
+
+export interface Sugerencia {
+  tipo: "item" | "categoria" | "ubicacion" | "estado" | "disponibilidad";
+  etiqueta: string;
+  detalle?: string;
+  /** Parámetro de búsqueda que aplica el filtro, o el id del ítem. */
+  valor: string;
+}
+
+const ESTADOS_BUSCABLES = [
+  { valor: "operativo", etiqueta: "Operativo" },
+  { valor: "mantenimiento", etiqueta: "En mantenimiento" },
+  { valor: "baja", etiqueta: "Dado de baja" },
+];
+
+const DISPONIBILIDAD_BUSCABLE = [
+  { valor: "disponibles", etiqueta: "Con stock disponible" },
+  { valor: "prestados", etiqueta: "Con unidades prestadas" },
+  { valor: "agotados", etiqueta: "Sin stock libre" },
+];
+
+/**
+ * Lo que se ofrece mientras se escribe: primero los filtros que calzan
+ * (categoría, ubicación, estado, disponibilidad) y después los ítems. Así
+ * escribir «resi» ofrece la categoría Resistencias entera, no 102 filas.
+ */
+export function sugerencias(q: string, limiteItems = 6): Sugerencia[] {
+  const texto = sinAcentos(q.trim());
+  if (texto.length < 2) return [];
+  const como = `%${texto}%`;
+  const out: Sugerencia[] = [];
+
+  for (const c of db.prepare(
+    `SELECT c.id, c.nombre, (SELECT COUNT(*) FROM items i WHERE i.categoria_id = c.id) AS n
+     FROM categorias c WHERE sinacentos(c.nombre) LIKE ? ORDER BY n DESC LIMIT 3`,
+  ).all(como) as Array<{ id: number; nombre: string; n: number }>) {
+    out.push({ tipo: "categoria", etiqueta: c.nombre, detalle: `${c.n} ítem(s)`, valor: String(c.id) });
+  }
+
+  for (const u of db.prepare(
+    `SELECT u.id, u.nombre, (SELECT COUNT(*) FROM items i WHERE i.ubicacion_id = u.id) AS n
+     FROM ubicaciones u WHERE sinacentos(u.nombre) LIKE ? ORDER BY n DESC LIMIT 3`,
+  ).all(como) as Array<{ id: number; nombre: string; n: number }>) {
+    out.push({ tipo: "ubicacion", etiqueta: u.nombre, detalle: `${u.n} ítem(s)`, valor: String(u.id) });
+  }
+
+  for (const e of ESTADOS_BUSCABLES) {
+    if (sinAcentos(e.etiqueta).includes(texto) || e.valor.includes(texto)) {
+      out.push({ tipo: "estado", etiqueta: e.etiqueta, valor: e.valor });
+    }
+  }
+
+  for (const d of DISPONIBILIDAD_BUSCABLE) {
+    if (sinAcentos(d.etiqueta).includes(texto) || d.valor.includes(texto)) {
+      out.push({ tipo: "disponibilidad", etiqueta: d.etiqueta, valor: d.valor });
+    }
+  }
+
+  for (const i of listarItems({ q }).slice(0, limiteItems)) {
+    out.push({
+      tipo: "item",
+      etiqueta: i.nombre,
+      detalle: [i.codigo, i.ubicacion, `${i.disponible} disponibles`].filter(Boolean).join(" · "),
+      valor: String(i.id),
+    });
+  }
+
+  return out;
+}

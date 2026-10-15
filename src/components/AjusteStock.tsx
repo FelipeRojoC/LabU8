@@ -56,7 +56,7 @@ export function EliminarItem({ itemId, nombre }: { itemId: number; nombre: strin
   const [estado, formAction] = useActionState(
     async (prev: { ok: boolean; error?: string }, fd: FormData) => {
       const r = await eliminarItemAction(prev, fd);
-      if (r.ok) router.push("/inventario");
+      if (r.ok) router.push("/encargado/inventario");
       return r;
     },
     { ok: false },

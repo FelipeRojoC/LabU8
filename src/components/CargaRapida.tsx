@@ -110,7 +110,7 @@ export function CargaRapida({
             {agregados.map((a) => (
               <li key={a.id} className="flex items-center gap-2 py-2 text-sm">
                 <Check size={14} className="shrink-0 text-ok" aria-hidden />
-                <Link href={`/inventario/${a.id}`} className="flex-1 truncate hover:text-brand">
+                <Link href={`/encargado/inventario/${a.id}`} className="flex-1 truncate hover:text-brand">
                   {a.nombre}
                 </Link>
               </li>

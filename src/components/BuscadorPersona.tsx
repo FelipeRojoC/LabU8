@@ -98,12 +98,24 @@ export function BuscadorPersona({
 
   // ------------------------------------------------------- persona nueva
   if (nueva) {
+    // Lo que ya venía escrito se arrastra: si buscaste «Pedro» y no estaba, el
+    // nombre llega puesto en vez de obligarte a tipearlo de nuevo. Si lo que
+    // escribiste parece un RUT, va al campo de RUT.
+    const escrito = texto.trim();
+    const pareceRut = /^[\d.\- kK]{7,}$/.test(escrito);
+
     return (
       <div className="space-y-2 rounded-lg border border-line p-3">
         <p className="text-xs font-medium text-muted">Persona nueva</p>
-        <input name="persona_nueva_nombre" className="input-base" placeholder="Nombre completo" required autoFocus />
+        <input
+          name="persona_nueva_nombre" className="input-base" placeholder="Nombre completo"
+          defaultValue={pareceRut ? "" : escrito} required autoFocus
+        />
         <div className="grid grid-cols-2 gap-2">
-          <input name="persona_nueva_rut" className="input-base" placeholder="RUT (obligatorio)" required />
+          <input
+            name="persona_nueva_rut" className="input-base" placeholder="RUT (obligatorio)"
+            defaultValue={pareceRut ? escrito : ""} required
+          />
           <select name="persona_nueva_rol" className="input-base" defaultValue="estudiante">
             <option value="estudiante">Estudiante</option>
             <option value="docente">Docente</option>
@@ -116,7 +128,10 @@ export function BuscadorPersona({
           <input name="persona_nueva_email" type="email" className="input-base" placeholder="Correo (obligatorio)" required />
           <input name="persona_nueva_telefono" className="input-base" placeholder="Teléfono" />
         </div>
-        <button type="button" className="text-xs text-brand hover:underline" onClick={() => setNueva(false)}>
+        <button
+          type="button" className="text-xs text-brand hover:underline"
+          onClick={() => setNueva(false)}
+        >
           ← Buscar a alguien ya registrado
         </button>
       </div>
@@ -169,7 +184,8 @@ export function BuscadorPersona({
       )}
 
       <button type="button" className="btn btn-ghost w-full" onClick={() => setNueva(true)}>
-        <UserPlus size={15} aria-hidden /> No está registrado
+        <UserPlus size={15} aria-hidden />
+        {texto.trim() ? `Registrar a «${texto.trim()}»` : "No está registrado"}
       </button>
     </div>
   );

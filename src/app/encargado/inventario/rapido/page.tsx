@@ -10,8 +10,8 @@ export default function CargaRapidaPagina() {
   return (
     <div className="space-y-5">
       <div>
-        <Link href="/inventario" className="flex items-center gap-1 text-sm text-muted hover:text-brand">
-          <ArrowLeft size={14} aria-hidden /> Inventario
+        <Link href="/encargado/inventario" className="flex items-center gap-1 text-sm text-muted hover:text-brand">
+          <ArrowLeft size={14} aria-hidden /> Gestión del inventario
         </Link>
         <h1 className="mt-1 text-2xl font-semibold">Carga rápida</h1>
         <p className="text-sm text-muted">

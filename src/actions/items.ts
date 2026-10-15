@@ -7,7 +7,7 @@ import {
   eliminarItem, obtenerItem,
 } from "@/lib/queries/items";
 import { borrarFoto, guardarFoto } from "@/lib/upload";
-import { ayudanteEnTurno } from "@/lib/session";
+import { exigirEncargado } from "@/lib/session";
 
 export interface Resultado { ok: boolean; error?: string; id?: number }
 
@@ -29,7 +29,7 @@ const Esquema = z.object({
 /** Alta y edición de ítems comparten formulario: `id` vacío = alta. */
 export async function guardarItemAction(_prev: Resultado, fd: FormData): Promise<Resultado> {
   try {
-    const autor = await ayudanteEnTurno();
+    const autor = await exigirEncargado();
     const id = numero(fd.get("id"));
 
     // Categoría / ubicación nuevas escritas a mano en el mismo formulario.
@@ -71,15 +71,17 @@ export async function guardarItemAction(_prev: Resultado, fd: FormData): Promise
       actualizarItem(
         id,
         { ...datos, foto: foto ?? (quitarFoto ? null : previo.foto) },
-        autor?.id,
+        autor.id,
       );
       if (foto || quitarFoto) await borrarFoto(previo.foto);
       revalidatePath("/inventario");
       revalidatePath(`/inventario/${id}`);
+      revalidatePath("/encargado/inventario");
+      revalidatePath(`/encargado/inventario/${id}`);
       return { ok: true, id };
     }
 
-    const nuevo = crearItem({ ...datos, foto }, autor?.id);
+    const nuevo = crearItem({ ...datos, foto }, autor.id);
     revalidatePath("/inventario");
     return { ok: true, id: nuevo };
   } catch (e) {
@@ -89,13 +91,14 @@ export async function guardarItemAction(_prev: Resultado, fd: FormData): Promise
 
 export async function ajustarStockAction(_prev: Resultado, fd: FormData): Promise<Resultado> {
   try {
-    const autor = await ayudanteEnTurno();
+    const autor = await exigirEncargado();
     const id = Number(fd.get("id"));
     const delta = Number(fd.get("delta"));
     if (!delta) return { ok: false, error: "Indica cuántas unidades entran o salen" };
-    ajustarStock(id, delta, String(fd.get("motivo") ?? ""), autor?.id);
+    ajustarStock(id, delta, String(fd.get("motivo") ?? ""), autor.id);
     revalidatePath("/inventario");
     revalidatePath(`/inventario/${id}`);
+    revalidatePath(`/encargado/inventario/${id}`);
     return { ok: true, id };
   } catch (e) {
     return { ok: false, error: (e as Error).message };
@@ -104,6 +107,7 @@ export async function ajustarStockAction(_prev: Resultado, fd: FormData): Promis
 
 export async function eliminarItemAction(_prev: Resultado, fd: FormData): Promise<Resultado> {
   try {
+    await exigirEncargado();
     const id = Number(fd.get("id"));
     const it = obtenerItem(id);
     eliminarItem(id);
@@ -122,7 +126,7 @@ export async function eliminarItemAction(_prev: Resultado, fd: FormData): Promis
  */
 export async function agregarRapidoAction(_prev: Resultado, fd: FormData): Promise<Resultado> {
   try {
-    const autor = await ayudanteEnTurno();
+    const autor = await exigirEncargado();
     const nombre = String(fd.get("nombre") ?? "").trim();
     if (nombre.length < 2) return { ok: false, error: "Escribe el nombre del ítem" };
 
@@ -144,9 +148,10 @@ export async function agregarRapidoAction(_prev: Resultado, fd: FormData): Promi
         marca: texto(fd.get("marca")),
         dueno_id: numero(fd.get("dueno_id")),
       },
-      autor?.id,
+      autor.id,
     );
     revalidatePath("/inventario");
+    revalidatePath("/encargado/inventario");
     return { ok: true, id };
   } catch (e) {
     return { ok: false, error: (e as Error).message };
