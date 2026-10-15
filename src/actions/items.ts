@@ -52,6 +52,7 @@ export async function guardarItemAction(_prev: Resultado, fd: FormData): Promise
       modelo: texto(fd.get("modelo")),
       n_serie: texto(fd.get("n_serie")),
       cantidad_total: numero(fd.get("cantidad_total")) ?? 1,
+      precio: numero(fd.get("precio")),
       prestable: fd.get("prestable") ? 1 : 0,
       consumible: fd.get("consumible") ? 1 : 0,
       estado: (texto(fd.get("estado")) ?? "operativo") as "operativo" | "mantenimiento" | "baja",
@@ -137,6 +138,7 @@ export async function agregarRapidoAction(_prev: Resultado, fd: FormData): Promi
       {
         nombre,
         cantidad_total: numero(fd.get("cantidad_total")) ?? 1,
+      precio: numero(fd.get("precio")),
         categoria_id,
         ubicacion_id,
         marca: texto(fd.get("marca")),

@@ -31,6 +31,8 @@ export interface Item {
   modelo: string | null;
   n_serie: string | null;
   cantidad_total: number;
+  /** Precio de venta de referencia, en pesos. Null si no se vende. */
+  precio: number | null;
   prestable: number;
   consumible: number;
   estado: EstadoItem;

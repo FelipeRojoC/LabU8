@@ -22,7 +22,7 @@ export function TurnoForm({ ayudantes, bloques }: { ayudantes: Persona[]; bloque
 
       {ayudantes.length === 0 ? (
         <p className="text-sm text-muted">
-          Primero registra ayudantes en <Link href="/personas" className="text-brand underline">Personas</Link>.
+          Primero registra ayudantes en <Link href="/encargado/personas" className="text-brand underline">Personas</Link>.
         </p>
       ) : (
         <>

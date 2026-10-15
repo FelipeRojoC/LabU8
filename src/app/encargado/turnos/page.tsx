@@ -52,9 +52,9 @@ export default async function Registro({
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <Link href={`/registro?anio=${aPrev}&mes=${mPrev}`} className="btn btn-ghost">←</Link>
+        <Link href={`/encargado/turnos?anio=${aPrev}&mes=${mPrev}`} className="btn btn-ghost">←</Link>
         <p className="text-lg font-medium capitalize">{MESES[mes]} {anio}</p>
-        <Link href={`/registro?anio=${aSig}&mes=${mSig}`} className="btn btn-ghost">→</Link>
+        <Link href={`/encargado/turnos?anio=${aSig}&mes=${mSig}`} className="btn btn-ghost">→</Link>
         <span className="card ml-auto px-3 py-2 text-sm">
           <Clock size={13} className="mr-1 inline text-brand" aria-hidden />
           {horas(totalMin)} en total

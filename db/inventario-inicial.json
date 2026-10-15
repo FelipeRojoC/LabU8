@@ -1,0 +1,720 @@
+{
+ "origen": "Inventario U8 - Septiembre 2026.xlsx, hoja INVENTARIO",
+ "categoria": "Resistencias",
+ "items": [
+  {
+   "nombre": "1,2 kohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 7,
+   "vendido": 0
+  },
+  {
+   "nombre": "1,8 kohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 9,
+   "vendido": 0
+  },
+  {
+   "nombre": "180 ohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 10,
+   "vendido": 0
+  },
+  {
+   "nombre": "30 kohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 10,
+   "vendido": 0
+  },
+  {
+   "nombre": "910 ohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 10,
+   "vendido": 0
+  },
+  {
+   "nombre": "390 ohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 11,
+   "vendido": 0
+  },
+  {
+   "nombre": "2 kohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 12,
+   "vendido": 0
+  },
+  {
+   "nombre": "330 kohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 12,
+   "vendido": 0
+  },
+  {
+   "nombre": "200 kohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 13,
+   "vendido": 0
+  },
+  {
+   "nombre": "150 kohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 14,
+   "vendido": 0
+  },
+  {
+   "nombre": "680 ohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 15,
+   "vendido": 0
+  },
+  {
+   "nombre": "1 ohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 17,
+   "vendido": 0
+  },
+  {
+   "nombre": "51 kohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 19,
+   "vendido": 0
+  },
+  {
+   "nombre": "2,2 ohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 20,
+   "vendido": 0
+  },
+  {
+   "nombre": "22 ohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 20,
+   "vendido": 0
+  },
+  {
+   "nombre": "3,3 ohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 20,
+   "vendido": 0
+  },
+  {
+   "nombre": "330 ohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 20,
+   "vendido": 0
+  },
+  {
+   "nombre": "33 ohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 21,
+   "vendido": 0
+  },
+  {
+   "nombre": "470 ohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 21,
+   "vendido": 0
+  },
+  {
+   "nombre": "47 ohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 24,
+   "vendido": 0
+  },
+  {
+   "nombre": "4,7 ohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 25,
+   "vendido": 0
+  },
+  {
+   "nombre": "12 kohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 27,
+   "vendido": 0
+  },
+  {
+   "nombre": "220 ohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 30,
+   "vendido": 0
+  },
+  {
+   "nombre": "2,2 kohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 52,
+   "vendido": 0
+  },
+  {
+   "nombre": "10 ohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 35,
+   "vendido": 0
+  },
+  {
+   "nombre": "100 ohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 54,
+   "vendido": 0
+  },
+  {
+   "nombre": "22 kohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 35,
+   "vendido": 0
+  },
+  {
+   "nombre": "3,3 kohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 35,
+   "vendido": 0
+  },
+  {
+   "nombre": "4,7 kohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 44,
+   "vendido": 0
+  },
+  {
+   "nombre": "10 kohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 46,
+   "vendido": 0
+  },
+  {
+   "nombre": "100 kohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 50,
+   "vendido": 0
+  },
+  {
+   "nombre": "1 kohm",
+   "ubicacion": "Sala, estante 2, repisa 1",
+   "precio": null,
+   "stock": 73,
+   "vendido": 0
+  },
+  {
+   "nombre": "0 ohm",
+   "ubicacion": null,
+   "precio": 150,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "1 m",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "1,2 ohm",
+   "ubicacion": null,
+   "precio": 150,
+   "stock": 93,
+   "vendido": 0
+  },
+  {
+   "nombre": "1,5 kohm",
+   "ubicacion": null,
+   "precio": 1000,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "1,5 ohm",
+   "ubicacion": null,
+   "precio": 150,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "1,8 ohm",
+   "ubicacion": null,
+   "precio": 200,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "10 m",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "12 ohm",
+   "ubicacion": null,
+   "precio": 350,
+   "stock": 27,
+   "vendido": 0
+  },
+  {
+   "nombre": "120 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "120 ohm",
+   "ubicacion": null,
+   "precio": 500,
+   "stock": 19,
+   "vendido": 0
+  },
+  {
+   "nombre": "15 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "15 ohm",
+   "ubicacion": null,
+   "precio": 350,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "150 ohm",
+   "ubicacion": null,
+   "precio": 500,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "18 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "18 ohm",
+   "ubicacion": null,
+   "precio": 350,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "180 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "2 m",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "2,2 m",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "2,4 kohm",
+   "ubicacion": null,
+   "precio": 1000,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "2,7 kohm",
+   "ubicacion": null,
+   "precio": 1000,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "20 ohm",
+   "ubicacion": null,
+   "precio": 350,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "200 ohm",
+   "ubicacion": null,
+   "precio": 500,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "220 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "27 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "27 ohm",
+   "ubicacion": null,
+   "precio": 350,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "270 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "270 ohm",
+   "ubicacion": null,
+   "precio": 500,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "3 kohm",
+   "ubicacion": null,
+   "precio": 1200,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "30 ohm",
+   "ubicacion": null,
+   "precio": 350,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "300 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "300 ohm",
+   "ubicacion": null,
+   "precio": 500,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "33 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "36 kohm",
+   "ubicacion": null,
+   "precio": 1600,
+   "stock": 19,
+   "vendido": 0
+  },
+  {
+   "nombre": "360 ohm",
+   "ubicacion": null,
+   "precio": 500,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "39 kohm",
+   "ubicacion": null,
+   "precio": 2000,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "390 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "4,3 kohm",
+   "ubicacion": null,
+   "precio": 1200,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "43 kohm",
+   "ubicacion": null,
+   "precio": 2500,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "43 ohm",
+   "ubicacion": null,
+   "precio": 400,
+   "stock": 19,
+   "vendido": 0
+  },
+  {
+   "nombre": "430 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "430 ohm",
+   "ubicacion": null,
+   "precio": 550,
+   "stock": 19,
+   "vendido": 0
+  },
+  {
+   "nombre": "47 kohm",
+   "ubicacion": null,
+   "precio": 6000,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "470 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "5,1 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "5,6 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "5,6 ohm",
+   "ubicacion": null,
+   "precio": 300,
+   "stock": 19,
+   "vendido": 0
+  },
+  {
+   "nombre": "51 ohm",
+   "ubicacion": null,
+   "precio": 450,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "510 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "510 ohm",
+   "ubicacion": null,
+   "precio": 700,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "56 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "56 ohm",
+   "ubicacion": null,
+   "precio": 500,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "560 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "560 ohm",
+   "ubicacion": null,
+   "precio": 700,
+   "stock": 19,
+   "vendido": 0
+  },
+  {
+   "nombre": "6,8 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "6,8 ohm",
+   "ubicacion": null,
+   "precio": 300,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "68 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "68 ohm",
+   "ubicacion": null,
+   "precio": 500,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "680 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "7,5 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "75 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "75 ohm",
+   "ubicacion": null,
+   "precio": 500,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "750 ohm",
+   "ubicacion": null,
+   "precio": 800,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "8,2 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "82 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "82 ohm",
+   "ubicacion": null,
+   "precio": 500,
+   "stock": 19,
+   "vendido": 0
+  },
+  {
+   "nombre": "820 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "820 ohm",
+   "ubicacion": null,
+   "precio": 800,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "9,1 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "91 kohm",
+   "ubicacion": null,
+   "precio": null,
+   "stock": 0,
+   "vendido": 0
+  },
+  {
+   "nombre": "91 ohm",
+   "ubicacion": null,
+   "precio": 500,
+   "stock": 19,
+   "vendido": 0
+  }
+ ]
+}

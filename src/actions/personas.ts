@@ -28,11 +28,11 @@ export async function guardarPersonaAction(_prev: Resultado, fd: FormData): Prom
     const id = Number(fd.get("id")) || 0;
     if (id) {
       actualizarPersona(id, datos);
-      revalidatePath("/personas");
+      revalidatePath("/encargado/personas");
       return { ok: true, id };
     }
     const nuevo = crearPersona(datos);
-    revalidatePath("/personas");
+    revalidatePath("/encargado/personas");
     return { ok: true, id: nuevo };
   } catch (e) {
     return { ok: false, error: (e as Error).message };

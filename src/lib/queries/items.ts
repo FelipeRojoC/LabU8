@@ -112,15 +112,15 @@ export function crearItem(data: Partial<EntradaItem> & { nombre: string }, autor
   const info = db
     .prepare(
       `INSERT INTO items (codigo, nombre, descripcion, categoria_id, ubicacion_id, marca,
-                          modelo, n_serie, cantidad_total, prestable, consumible, estado,
-                          foto, dueno_id, notas)
+                          modelo, n_serie, cantidad_total, precio, prestable, consumible,
+                          estado, foto, dueno_id, notas)
        VALUES (@codigo, @nombre, @descripcion, @categoria_id, @ubicacion_id, @marca,
-               @modelo, @n_serie, @cantidad_total, @prestable, @consumible, @estado,
-               @foto, @dueno_id, @notas)`,
+               @modelo, @n_serie, @cantidad_total, @precio, @prestable, @consumible,
+               @estado, @foto, @dueno_id, @notas)`,
     )
     .run({
       descripcion: null, categoria_id: null, ubicacion_id: null, marca: null,
-      modelo: null, n_serie: null, cantidad_total: 1, prestable: 1, consumible: 0,
+      modelo: null, n_serie: null, cantidad_total: 1, precio: null, prestable: 1, consumible: 0,
       estado: "operativo", foto: null, dueno_id: null, notas: null,
       ...data,
       codigo,
@@ -140,7 +140,7 @@ export function actualizarItem(id: number, data: Partial<EntradaItem>, autorId?:
   db.prepare(
     `UPDATE items SET codigo=@codigo, nombre=@nombre, descripcion=@descripcion,
         categoria_id=@categoria_id, ubicacion_id=@ubicacion_id, marca=@marca, modelo=@modelo,
-        n_serie=@n_serie, cantidad_total=@cantidad_total, prestable=@prestable,
+        n_serie=@n_serie, cantidad_total=@cantidad_total, precio=@precio, prestable=@prestable,
         consumible=@consumible, estado=@estado, foto=@foto, dueno_id=@dueno_id, notas=@notas,
         actualizado_en = datetime('now','localtime')
      WHERE id=@id`,
@@ -244,3 +244,36 @@ export function resumenInventario() {
         WHERE p.estado='activo')                                    AS prestadas
   `).get() as { tipos: number; unidades: number; mantenimiento: number; prestadas: number };
 }
+
+// --------------------------------------------- catálogos editables (encargado)
+
+/** Categorías con cuántos ítems las usan, para poder borrarlas con criterio. */
+export const categoriasConUso = (): Array<Categoria & { usos: number }> =>
+  db.prepare(
+    `SELECT c.*, (SELECT COUNT(*) FROM items i WHERE i.categoria_id = c.id) AS usos
+     FROM categorias c ORDER BY c.nombre COLLATE NOCASE`,
+  ).all() as Array<Categoria & { usos: number }>;
+
+export const ubicacionesConUso = (): Array<Ubicacion & { usos: number }> =>
+  db.prepare(
+    `SELECT u.*, (SELECT COUNT(*) FROM items i WHERE i.ubicacion_id = u.id) AS usos
+     FROM ubicaciones u ORDER BY u.nombre COLLATE NOCASE`,
+  ).all() as Array<Ubicacion & { usos: number }>;
+
+export function renombrarCategoria(id: number, nombre: string, color?: string) {
+  db.prepare("UPDATE categorias SET nombre = ?, color = COALESCE(?, color) WHERE id = ?")
+    .run(nombre, color ?? null, id);
+}
+
+export function renombrarUbicacion(id: number, nombre: string, descripcion?: string | null) {
+  db.prepare("UPDATE ubicaciones SET nombre = ?, descripcion = ? WHERE id = ?")
+    .run(nombre, descripcion ?? null, id);
+}
+
+// Los ítems que las usaban quedan sin categoría/ubicación (ON DELETE SET NULL),
+// no se borran: perder una etiqueta no puede costar perder el equipo.
+export const eliminarCategoria = (id: number) =>
+  db.prepare("DELETE FROM categorias WHERE id = ?").run(id);
+
+export const eliminarUbicacion = (id: number) =>
+  db.prepare("DELETE FROM ubicaciones WHERE id = ?").run(id);

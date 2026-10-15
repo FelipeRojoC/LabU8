@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS items (
   modelo         TEXT,
   n_serie        TEXT,
   cantidad_total INTEGER NOT NULL DEFAULT 1 CHECK (cantidad_total >= 0),
+  precio         INTEGER,                      -- precio de venta de referencia, en pesos
   prestable      INTEGER NOT NULL DEFAULT 1, -- 0 = uso solo dentro del laboratorio
   consumible     INTEGER NOT NULL DEFAULT 0, -- se descuenta al entregar, no vuelve
   estado         TEXT    NOT NULL DEFAULT 'operativo'

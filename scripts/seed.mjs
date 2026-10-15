@@ -172,10 +172,11 @@ const CATEGORIAS = [
 const insCat = db.prepare("INSERT OR IGNORE INTO categorias (nombre,color) VALUES (?,?)");
 for (const c of CATEGORIAS) insCat.run(...c);
 const catId = (n) => db.prepare("SELECT id FROM categorias WHERE nombre=?").get(n)?.id ?? null;
+const crearCat = (n, color = "slate") =>
+  Number(db.prepare("INSERT INTO categorias (nombre,color) VALUES (?,?)").run(n, color).lastInsertRowid);
 
+// Ubicaciones de partida. Las de la planilla se crean solas al importar.
 const UBICACIONES = [
-  ["Estante A", "Instrumentos de medición"],
-  ["Estante B", "Componentes y cables"],
   ["Bodega U8", "Equipos grandes y máquinas"],
   ["Mesón central", "Uso diario"],
   ["Gabinete con llave", "Equipos de alto valor"],
@@ -183,57 +184,41 @@ const UBICACIONES = [
 const insUbi = db.prepare("INSERT OR IGNORE INTO ubicaciones (nombre,descripcion) VALUES (?,?)");
 for (const u of UBICACIONES) insUbi.run(...u);
 const ubiId = (n) => db.prepare("SELECT id FROM ubicaciones WHERE nombre=?").get(n)?.id ?? null;
+const crearUbi = (n) =>
+  Number(db.prepare("INSERT INTO ubicaciones (nombre) VALUES (?)").run(n).lastInsertRowid);
 
 // ------------------------------------------------------- inventario base
-// Punto de partida editable: ajusta cantidades, borra lo que no exista y
-// agrega el resto desde «Inventario → Agregar ítem» con su foto.
-const ITEMS = [
-  ["Multímetro digital",        "Instrumentos de medición", "Estante A",        12, { marca: "Fluke", modelo: "117" }],
-  ["Multímetro de banco",       "Instrumentos de medición", "Mesón central",     4, {}],
-  ["Osciloscopio digital",      "Instrumentos de medición", "Gabinete con llave",6, { marca: "Rigol", modelo: "DS1054Z" }],
-  ["Punta de osciloscopio",     "Instrumentos de medición", "Estante A",        14, {}],
-  ["Pinza amperimétrica",       "Instrumentos de medición", "Estante A",         6, {}],
-  ["Generador de funciones",    "Instrumentos de medición", "Mesón central",     6, {}],
-  ["Fuente de poder DC regulable","Fuentes y alimentación", "Mesón central",     8, { descripcion: "0-30 V / 0-5 A" }],
-  ["Autotransformador (Variac)","Fuentes y alimentación",   "Bodega U8",         4, {}],
-  ["Transformador monofásico",  "Máquinas eléctricas",      "Bodega U8",         5, {}],
-  ["Motor de inducción trifásico","Máquinas eléctricas",    "Bodega U8",         3, {}],
-  ["Motor DC de laboratorio",   "Máquinas eléctricas",      "Bodega U8",         3, {}],
-  ["Banco de condensadores",    "Componentes",              "Estante B",         4, {}],
-  ["Set de resistencias de potencia","Componentes",         "Estante B",        10, {}],
-  ["Protoboard",                "Componentes",              "Estante B",        20, {}],
-  ["Cables banana-banana",      "Cables y conectores",      "Estante B",        60, { consumible: 0 }],
-  ["Cables caimán",             "Cables y conectores",      "Estante B",        40, {}],
-  ["Alargador eléctrico",       "Cables y conectores",      "Mesón central",     6, {}],
-  ["Juego de destornilladores", "Herramientas",             "Mesón central",     8, {}],
-  ["Alicate de corte",          "Herramientas",             "Mesón central",     8, {}],
-  ["Cautín y soldadura",        "Herramientas",             "Estante A",         6, {}],
-  ["Guantes dieléctricos",      "Protección y seguridad",   "Gabinete con llave",8, {}],
-  ["Lentes de seguridad",       "Protección y seguridad",   "Mesón central",    20, {}],
-  ["Módulo entrenador de electrotecnia","Módulos y entrenadores","Bodega U8",    6, {}],
-];
-
+// Sale de la planilla real del laboratorio, convertida a JSON en
+// db/inventario-inicial.json. Todo es editable después desde la aplicación.
 const hayItems = db.prepare("SELECT COUNT(*) AS n FROM items").get().n;
 if (hayItems === 0) {
+  const base = JSON.parse(
+    fs.readFileSync(path.join(process.cwd(), "db", "inventario-inicial.json"), "utf8"),
+  );
+  const catBase = catId(base.categoria) ?? crearCat(base.categoria, "emerald");
+
   const insItem = db.prepare(
-    `INSERT INTO items (codigo,nombre,descripcion,categoria_id,ubicacion_id,marca,modelo,cantidad_total,consumible)
-     VALUES (?,?,?,?,?,?,?,?,?)`,
+    `INSERT INTO items (codigo, nombre, categoria_id, ubicacion_id, cantidad_total,
+                        precio, consumible, notas)
+     VALUES (?,?,?,?,?,?,?,?)`,
   );
   let n = 1;
-  for (const [nombre, cat, ubi, cantidad, extra] of ITEMS) {
+  for (const it of base.items) {
     insItem.run(
       `INV-${String(n++).padStart(4, "0")}`,
-      nombre,
-      extra.descripcion ?? null,
-      catId(cat),
-      ubiId(ubi),
-      extra.marca ?? null,
-      extra.modelo ?? null,
-      cantidad,
-      extra.consumible ?? 0,
+      it.nombre,
+      catBase,
+      it.ubicacion ? (ubiId(it.ubicacion) ?? crearUbi(it.ubicacion)) : null,
+      it.stock,
+      it.precio,
+      1,                      // son componentes: se entregan y no vuelven
+      it.ubicacion ? null : "Sin ubicación en la planilla de origen",
     );
   }
-  console.log(`· ${ITEMS.length} ítems de catálogo inicial`);
+  console.log(
+    `· ${base.items.length} productos cargados desde la planilla ` +
+    `(${base.items.reduce((a, i) => a + i.stock, 0)} unidades)`,
+  );
 } else {
   console.log(`· inventario intacto (${hayItems} ítems ya cargados)`);
 }

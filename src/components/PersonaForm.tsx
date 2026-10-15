@@ -14,7 +14,7 @@ export function PersonaForm({ persona }: { persona?: Persona }) {
 
   useEffect(() => {
     if (estado.ok) {
-      if (persona) router.push("/personas");
+      if (persona) router.push("/encargado/personas");
       else ref.current?.reset();
     }
   }, [estado, persona, router]);
@@ -84,7 +84,7 @@ export function PersonaForm({ persona }: { persona?: Persona }) {
       <div className="flex gap-2">
         <BotonEnviar>{persona ? "Guardar cambios" : "Registrar"}</BotonEnviar>
         {persona && (
-          <Link href="/personas" className="btn btn-ghost">Cancelar</Link>
+          <Link href="/encargado/personas" className="btn btn-ghost">Cancelar</Link>
         )}
       </div>
     </form>

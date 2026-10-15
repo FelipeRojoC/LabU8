@@ -3,25 +3,27 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  ArrowLeftRight, Boxes, CalendarClock, ClipboardList, LayoutDashboard,
-  MessageSquare, Users,
+  ArrowLeftRight, Boxes, CalendarClock, LayoutDashboard, MessageSquare, ShieldCheck,
 } from "lucide-react";
 
+/** Vista diaria del ayudante. Todo lo de gestión vive aparte, en /encargado. */
 const LINKS = [
   { href: "/", label: "Panel", icon: LayoutDashboard },
   { href: "/inventario", label: "Inventario", icon: Boxes },
   { href: "/prestamos", label: "Préstamos", icon: ArrowLeftRight },
   { href: "/horario", label: "Horario", icon: CalendarClock },
   { href: "/bitacora", label: "Bitácora", icon: MessageSquare },
-  { href: "/registro", label: "Registro de turnos", icon: ClipboardList },
-  { href: "/personas", label: "Personas", icon: Users },
 ];
 
-export function Nav() {
+const ENCARGADO = { href: "/encargado", label: "Encargado", icon: ShieldCheck };
+
+export function Nav({ esEncargado = false }: { esEncargado?: boolean }) {
   const path = usePathname();
+  const links = esEncargado ? [...LINKS, ENCARGADO] : LINKS;
+
   return (
     <nav className="flex gap-1 overflow-x-auto">
-      {LINKS.map(({ href, label, icon: Icon }) => {
+      {links.map(({ href, label, icon: Icon }) => {
         const activo = href === "/" ? path === "/" : path.startsWith(href);
         return (
           <Link

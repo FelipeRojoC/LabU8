@@ -35,7 +35,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
               </span>
             </Link>
             <div className="order-3 w-full lg:order-2 lg:w-auto lg:flex-1">
-              <Nav />
+              <Nav esEncargado={!!actual?.es_encargado} />
             </div>
             <div className="order-2 ml-auto lg:order-3">
               <BarraTurno

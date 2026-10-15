@@ -28,6 +28,7 @@ export function migrar(db, schema) {
   // Columnas nuevas (no cambian la forma del resto de la tabla).
   agregarColumna(db, "personas", "es_encargado", "es_encargado INTEGER NOT NULL DEFAULT 0");
   agregarColumna(db, "items", "dueno_id", "dueno_id INTEGER REFERENCES personas(id) ON DELETE SET NULL");
+  agregarColumna(db, "items", "precio", "precio INTEGER");
 
   // Hubo una versión con cálculo de honorarios; se retiró junto con su tabla
   // de parámetros. El registro de turnos y sus horas se mantiene intacto.

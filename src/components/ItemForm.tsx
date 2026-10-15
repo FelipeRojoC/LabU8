@@ -163,6 +163,13 @@ export function ItemForm({
           <Campo etiqueta="N.º de serie">
             <input name="n_serie" defaultValue={item?.n_serie ?? ""} className="input-base font-mono" />
           </Campo>
+          <Campo etiqueta="Precio" hint="De venta, en pesos. Déjalo vacío si no se vende">
+            <input
+              name="precio" type="number" min={0} step={10}
+              defaultValue={item?.precio ?? ""} className="input-base"
+            />
+          </Campo>
+
           <Campo etiqueta="Dueño" hint="Material que un docente deja guardado acá">
             <select name="dueno_id" defaultValue={item?.dueno_id ?? ""} className="input-base">
               <option value="">Del laboratorio</option>

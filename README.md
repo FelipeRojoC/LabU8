@@ -59,6 +59,18 @@ npm start
    real, no contra el horario, así que **un reemplazo queda a nombre de quien
    efectivamente abrió** y aparece marcado como tal.
 
+### El inventario de partida
+
+Sale de la planilla real del laboratorio (`Inventario U8 - Septiembre 2026.xlsx`,
+hoja INVENTARIO), convertida a [`db/inventario-inicial.json`](db/inventario-inicial.json):
+102 productos y 1.083 unidades, con su ubicación y el precio donde la planilla
+lo traía. Todo es editable desde la aplicación; el JSON solo se usa en la carga
+inicial.
+
+Ojo: la planilla cubre **solo los componentes** (resistencias). Los equipos
+—multímetros, osciloscopios, fuentes— hay que cargarlos aparte con «Carga
+rápida» o «Agregar ítem».
+
 ### Quién puede hacer qué
 
 | | Ayudante | Encargado |
@@ -72,7 +84,12 @@ npm start
 | Dar por revisada una incidencia | no | sí |
 | Exportar a Excel | no | sí |
 
-El encargado se marca con una casilla en la ficha de la persona (`/personas`).
+El encargado se marca con una casilla en la ficha de la persona.
+
+Todo lo de gestión vive bajo **`/encargado`**, separado de la vista diaria del
+ayudante: ahí están las categorías y ubicaciones, las personas, el registro de
+horas y las exportaciones. Los ayudantes no ven ese menú. El permiso se
+comprueba una sola vez en `src/app/encargado/layout.tsx`.
 
 ### Quien debe equipos no puede llevarse más
 

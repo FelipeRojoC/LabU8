@@ -15,6 +15,6 @@ export async function corregirCierreAction(_prev: Resultado, fd: FormData): Prom
   const fecha = String(fd.get("fecha") ?? "").trim();   // 'YYYY-MM-DD'
   if (!/^\d{2}:\d{2}$/.test(hora)) return { ok: false, error: "Escribe la hora como HH:MM" };
   corregirCierre(id, `${fecha} ${hora}:00`);
-  revalidatePath("/registro");
+  revalidatePath("/encargado/turnos");
   return { ok: true };
 }
