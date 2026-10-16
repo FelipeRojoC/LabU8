@@ -68,7 +68,10 @@ clic en `manual/index.html`, o se sirve en la red del laboratorio:
 cd manual && python3 -m http.server 3003 --bind 0.0.0.0
 ```
 
-También se imprime bien desde el navegador.
+También se imprime bien desde el navegador. En
+[`manual/Manual del ayudante - Laboratorio U8.pdf`](manual) está la versión en
+PDF, tamaño A4, lista para imprimir o enviar: es la misma pero **sin la sección
+del encargado**, pensada para repartir entre los ayudantes.
 
 ## 3. Qué hace la página
 
