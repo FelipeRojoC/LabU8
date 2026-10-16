@@ -47,9 +47,15 @@ const partes = [
 -- =====================================================================
 
 PRAGMA foreign_keys = OFF;
-BEGIN TRANSACTION;
 `,
-  fs.readFileSync(path.join(process.cwd(), "db", "schema.sql"), "utf8"),
+  // Los PRAGMA del esquema se quitan: algunos (journal_mode) no se pueden
+  // ejecutar dentro de una transacción y hacían fallar la carga completa.
+  // Se vuelven a aplicar al final, ya fuera de ella.
+  fs.readFileSync(path.join(process.cwd(), "db", "schema.sql"), "utf8")
+    .split("\n")
+    .filter((l) => !/^\s*PRAGMA\s/i.test(l))
+    .join("\n"),
+  "\nBEGIN TRANSACTION;",
 ];
 
 for (const tabla of TABLAS) {
@@ -67,7 +73,7 @@ for (const tabla of TABLAS) {
   }
 }
 
-partes.push("\nCOMMIT;\nPRAGMA foreign_keys = ON;\n");
+partes.push("\nCOMMIT;\n\nPRAGMA journal_mode = WAL;\nPRAGMA foreign_keys = ON;\n");
 
 const destino = path.join(process.cwd(), "db", "labu8.sql");
 fs.writeFileSync(destino, partes.join("\n"));

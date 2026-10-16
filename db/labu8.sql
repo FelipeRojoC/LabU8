@@ -13,7 +13,6 @@
 -- =====================================================================
 
 PRAGMA foreign_keys = OFF;
-BEGIN TRANSACTION;
 
 -- =====================================================================
 -- Laboratorio de Electrotecnia U8 - Esquema de base de datos
@@ -21,8 +20,6 @@ BEGIN TRANSACTION;
 -- se evitan features exclusivas de SQLite salvo AUTOINCREMENT/TEXT dates.
 -- =====================================================================
 
-PRAGMA journal_mode = WAL;
-PRAGMA foreign_keys = ON;
 
 -- ---------------------------------------------------------------- gente
 CREATE TABLE IF NOT EXISTS personas (
@@ -213,6 +210,8 @@ CREATE TABLE IF NOT EXISTS bitacora (
 );
 CREATE INDEX IF NOT EXISTS idx_bitacora_fecha ON bitacora(creado_en DESC);
 
+
+BEGIN TRANSACTION;
 
 -- 7 fila(s) en bloques
 INSERT INTO bloques (codigo, inicio, termino, orden) VALUES ('A', '08:10', '09:40', 1);
@@ -427,4 +426,6 @@ INSERT INTO items (id, codigo, nombre, descripcion, categoria_id, ubicacion_id, 
 INSERT INTO items (id, codigo, nombre, descripcion, categoria_id, ubicacion_id, marca, modelo, n_serie, cantidad_total, prestable, consumible, estado, foto, notas, creado_en, actualizado_en, dueno_id, precio) VALUES (102, 'INV-0102', '91 ohm', NULL, 9, NULL, NULL, NULL, NULL, 19, 1, 1, 'operativo', NULL, 'Sin ubicación en la planilla de origen', '2026-10-15 17:39:39', '2026-10-15 17:39:39', NULL, 500);
 
 COMMIT;
+
+PRAGMA journal_mode = WAL;
 PRAGMA foreign_keys = ON;
