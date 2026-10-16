@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { encargadoEnTurno } from "@/lib/session";
+import { encargadoActual } from "@/lib/session";
 
 /**
  * Exporta a CSV para abrir en Excel. Se sirve con BOM UTF-8 porque si no,
@@ -72,7 +72,7 @@ function aCSV(cols: string[], filas: Record<string, unknown>[]): string {
 
 export async function GET(req: Request, ctx: { params: Promise<{ que: string }> }) {
   // Los datos de contacto y las horas no son para cualquiera.
-  if (!(await encargadoEnTurno())) {
+  if (!(await encargadoActual())) {
     return new Response("Solo el encargado puede exportar", { status: 403 });
   }
 

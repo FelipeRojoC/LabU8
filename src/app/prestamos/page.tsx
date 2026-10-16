@@ -5,7 +5,7 @@ import { Foto } from "@/components/Foto";
 import { Pill, Vacio } from "@/components/ui";
 import { DevolverRapido } from "@/components/AccionesPrestamo";
 import { parseFecha } from "@/lib/db";
-import { encargadoEnTurno } from "@/lib/session";
+import { encargadoActual } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +23,7 @@ export default async function Prestamos({
   const estado = (sp.estado ?? "activo") as "activo" | "devuelto" | "anulado" | "todos";
   const prestamos = listarPrestamos({ estado, q: sp.q });
   const r = resumenPrestamos();
-  const encargado = await encargadoEnTurno();
+  const encargado = await encargadoActual();
   const anio = new Date().getFullYear();
 
   return (

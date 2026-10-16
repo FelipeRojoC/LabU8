@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { obtenerPrestamo } from "@/lib/queries/prestamos";
-import { ayudanteEnTurno, encargadoEnTurno } from "@/lib/session";
+import { usuarioActual, encargadoActual } from "@/lib/session";
 import { DevolucionForm } from "@/components/DevolucionForm";
 import { Foto } from "@/components/Foto";
 import { Pill } from "@/components/ui";
@@ -15,8 +15,8 @@ export default async function DetallePrestamo({ params }: { params: Promise<{ id
   const { id } = await params;
   const p = obtenerPrestamo(Number(id));
   if (!p) notFound();
-  const ayudante = await ayudanteEnTurno();
-  const encargado = await encargadoEnTurno();
+  const ayudante = await usuarioActual();
+  const encargado = await encargadoActual();
   const vence = parseFecha(p.vence_en);
 
   return (

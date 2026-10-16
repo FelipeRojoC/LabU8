@@ -183,7 +183,7 @@ export function NuevoPrestamoForm({
             {ayudante ? (
               <Pill tono="info">{ayudante.nombre}</Pill>
             ) : (
-              <span className="text-warn">nadie con turno abierto — se registrará sin ayudante</span>
+              <span className="text-warn">nadie identificado — el préstamo quedará sin ayudante</span>
             )}
           </p>
           {estado.error && <Aviso error={estado.error} />}

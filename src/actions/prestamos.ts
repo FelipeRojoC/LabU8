@@ -5,7 +5,7 @@ import {
   anularPrestamo, crearPrestamo, devolverTodo, registrarDevolucion,
 } from "@/lib/queries/prestamos";
 import { crearPersona, obtenerPersona } from "@/lib/queries/personas";
-import { ayudanteEnTurno, exigirEncargado } from "@/lib/session";
+import { usuarioActual, exigirEncargado } from "@/lib/session";
 import type { Rol } from "@/lib/types";
 
 export interface Resultado { ok: boolean; error?: string; id?: number }
@@ -28,7 +28,7 @@ function revalidar() {
 
 export async function crearPrestamoAction(_prev: Resultado, fd: FormData): Promise<Resultado> {
   try {
-    const ayudante = await ayudanteEnTurno();
+    const ayudante = await usuarioActual();
 
     // Persona nueva creada al vuelo desde el mismo formulario.
     let persona_id = Number(fd.get("persona_id")) || 0;
@@ -87,9 +87,9 @@ export async function crearPrestamoAction(_prev: Resultado, fd: FormData): Promi
 
 export async function devolverAction(_prev: Resultado, fd: FormData): Promise<Resultado> {
   try {
-    const ayudante = await ayudanteEnTurno();
+    const ayudante = await usuarioActual();
     if (!ayudante) {
-      return { ok: false, error: "Abre tu turno antes de recibir devoluciones" };
+      return { ok: false, error: "Entra con tu nombre y tu PIN para recibir devoluciones" };
     }
     const prestamoId = Number(fd.get("prestamo_id"));
 
@@ -122,8 +122,8 @@ export async function devolverAction(_prev: Resultado, fd: FormData): Promise<Re
 /** Devolución completa desde la lista, sin entrar al detalle. */
 export async function devolverTodoAction(_prev: Resultado, fd: FormData): Promise<Resultado> {
   try {
-    const ayudante = await ayudanteEnTurno();
-    if (!ayudante) return { ok: false, error: "Abre tu turno antes de recibir devoluciones" };
+    const ayudante = await usuarioActual();
+    if (!ayudante) return { ok: false, error: "Entra con tu nombre y tu PIN para recibir devoluciones" };
     const id = Number(fd.get("prestamo_id"));
     devolverTodo(id, ayudante.id);
     revalidar();

@@ -6,7 +6,7 @@ import { quitarClaseAction, quitarTurnoAction } from "@/actions/horario";
 import { listarPersonas } from "@/lib/queries/personas";
 import { ClaseForm, TurnoForm } from "@/components/HorarioForms";
 import { DIAS } from "@/lib/types";
-import { encargadoEnTurno } from "@/lib/session";
+import { encargadoActual } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +26,7 @@ export default async function Horario() {
   const turnos = listarTurnos();
   const ayudantes = listarPersonas({ rol: "ayudante" });
   const ahora = estadoAhora();
-  const encargado = await encargadoEnTurno();
+  const encargado = await encargadoActual();
 
   return (
     <div className="space-y-6">

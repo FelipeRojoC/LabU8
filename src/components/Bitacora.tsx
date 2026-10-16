@@ -15,7 +15,7 @@ export function NotaTurnoForm({ puedeEscribir }: { puedeEscribir: boolean }) {
   if (!puedeEscribir) {
     return (
       <p className="rounded-lg border border-dashed border-line px-3 py-3 text-sm text-muted">
-        Abre tu turno para dejarle un recado al siguiente.
+        Entra con tu nombre y tu PIN para dejarle un recado al siguiente.
       </p>
     );
   }

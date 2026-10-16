@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Settings } from "lucide-react";
 import { historialItem, obtenerItem } from "@/lib/queries/items";
 import { listarPrestamos } from "@/lib/queries/prestamos";
-import { encargadoEnTurno } from "@/lib/session";
+import { encargadoActual } from "@/lib/session";
 import { Foto } from "@/components/Foto";
 import { Pill } from "@/components/ui";
 
@@ -31,7 +31,7 @@ export default async function DetalleItem({ params }: { params: Promise<{ id: st
   const item = obtenerItem(Number(id));
   if (!item) notFound();
 
-  const encargado = await encargadoEnTurno();
+  const encargado = await encargadoActual();
   const historial = historialItem(item.id, 15);
   const conEsteItem = listarPrestamos({ estado: "activo" }).filter((p) =>
     p.lineas.some((l) => l.item_id === item.id && l.cantidad > l.cantidad_devuelta),

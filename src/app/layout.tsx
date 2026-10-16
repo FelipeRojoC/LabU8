@@ -4,7 +4,7 @@ import Link from "next/link";
 import "./globals.css";
 import { Nav } from "@/components/Nav";
 import { BarraTurno } from "@/components/BarraTurno";
-import { ayudanteEnTurno, sesionAbierta } from "@/lib/session";
+import { turnoAbiertoDe, usuarioActual } from "@/lib/session";
 import { listarPersonas } from "@/lib/queries/personas";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -16,8 +16,8 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const actual = await ayudanteEnTurno();
-  const sesion = actual ? sesionAbierta(actual.id) : undefined;
+  const usuario = await usuarioActual();
+  const turno = usuario ? turnoAbiertoDe(usuario.id) : undefined;
   const ayudantes = listarPersonas({ rol: "ayudante" });
 
   return (
@@ -35,13 +35,13 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
               </span>
             </Link>
             <div className="order-3 w-full lg:order-2 lg:w-auto lg:flex-1">
-              <Nav esEncargado={!!actual?.es_encargado} />
+              <Nav esEncargado={!!usuario?.es_encargado} />
             </div>
             <div className="order-2 ml-auto lg:order-3">
               <BarraTurno
-                actual={actual}
+                usuario={usuario}
                 ayudantes={ayudantes}
-                desde={sesion?.abierto_en.slice(11, 16) ?? null}
+                desde={turno?.abierto_en.slice(11, 16) ?? null}
               />
             </div>
           </div>

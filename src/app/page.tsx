@@ -14,7 +14,7 @@ import {
   contarNovedades, desdeElUltimoTurno, incidenciasPendientes, listarNovedades,
 } from "@/lib/queries/novedades";
 import { turnosSinAbrirHoy } from "@/lib/queries/turnos";
-import { ayudanteEnTurno, encargadoEnTurno } from "@/lib/session";
+import { usuarioActual, encargadoActual } from "@/lib/session";
 import { MarcarVista, NotaTurnoForm } from "@/components/Bitacora";
 import { ListaNovedades } from "@/components/ListaNovedades";
 import { DevolverRapido } from "@/components/AccionesPrestamo";
@@ -56,8 +56,8 @@ export default async function Panel() {
   const rp = resumenPrestamos();
   const ri = resumenInventario();
   const activos = listarPrestamos({ estado: "activo", limite: 8 });
-  const yo = await ayudanteEnTurno();
-  const encargado = await encargadoEnTurno();
+  const yo = await usuarioActual();
+  const encargado = await encargadoActual();
   const resumen = desdeElUltimoTurno();
   const incidencias = incidenciasPendientes();
   const novedades = listarNovedades(12);

@@ -4,7 +4,7 @@ import { huecosDelMes, resumenMes, sesionesDelMes } from "@/lib/queries/turnos";
 import { CorregirCierre } from "@/components/CorregirCierre";
 import { Pill, Vacio } from "@/components/ui";
 import { DIAS } from "@/lib/types";
-import { encargadoEnTurno } from "@/lib/session";
+import { encargadoActual } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +33,7 @@ export default async function Registro({
   const resumen = resumenMes(anio, mes);
   const sesiones = sesionesDelMes(anio, mes);
   const huecos = huecosDelMes(anio, mes);
-  const encargado = await encargadoEnTurno();
+  const encargado = await encargadoActual();
   const ultimo = new Date(anio, mes, 0).getDate();
   const mm = String(mes).padStart(2, "0");
 
@@ -72,7 +72,7 @@ export default async function Registro({
       {resumen.length === 0 ? (
         <Vacio
           titulo="Todavía no hay turnos abiertos este mes"
-          detalle="El registro parte cuando los ayudantes usen el botón «Abrir turno» de arriba."
+          detalle="El registro parte cuando los ayudantes abran su turno al llegar. Entrar sin abrir turno no cuenta horas."
         />
       ) : (
         <div className="card overflow-x-auto">

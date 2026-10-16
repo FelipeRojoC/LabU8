@@ -5,17 +5,26 @@ import { verificarPin } from "@/lib/pin.mjs";
 import { abrir, firmar } from "@/lib/cookie";
 import type { Persona, SesionTurno } from "@/lib/types";
 
-const COOKIE = "labu8_ayudante";
+/**
+ * Identificarse y abrir turno son dos cosas distintas.
+ *
+ * - Iniciar sesión dice QUIÉN está usando el sistema. Es lo que da permisos y
+ *   lo que queda registrado en cada entrega y devolución.
+ * - Abrir turno además marca la hora de inicio y cuenta para el registro de
+ *   horas y los reemplazos.
+ *
+ * El encargado entra a corregir cosas sin que eso se contabilice como turno.
+ */
+
+const COOKIE = "labu8_sesion";
 
 const hoy = (d = new Date()) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-/**
- * Freno a la fuerza bruta: un PIN de 4 dígitos son 10.000 combinaciones, que
- * un script prueba en segundos. Tras 5 intentos fallidos la cuenta queda
- * bloqueada unos minutos. El contador vive en la base porque el servidor
- * atiende con varios procesos y uno en memoria no se comparte entre ellos.
- */
+// ------------------------------------------------- freno a la fuerza bruta
+// Un PIN de 4 dígitos son 10.000 combinaciones, que un script prueba en
+// segundos. El contador vive en la base porque el servidor atiende con varios
+// procesos y uno en memoria no se comparte entre ellos.
 const MAX_INTENTOS = 5;
 const CASTIGO_MIN = 5;
 
@@ -58,44 +67,56 @@ function anotarFallo(personaId: number) {
 const limpiarIntentos = (personaId: number) =>
   db.prepare("DELETE FROM intentos_login WHERE persona_id = ?").run(personaId);
 
-/**
- * Ayudante en turno. La cookie lleva el número de la SESIÓN, firmado: no se
- * puede inventar, y una cookie de un turno anterior tampoco sirve porque esa
- * sesión ya está cerrada.
- */
-export async function ayudanteEnTurno(): Promise<Persona | null> {
-  const c = await cookies();
-  const sesionId = abrir(c.get(COOKIE)?.value);
-  if (!sesionId) return null;
+// --------------------------------------------------------------- identidad
 
-  const p = db.prepare(
-    `SELECT p.* FROM sesiones_turno s JOIN personas p ON p.id = s.persona_id
-     WHERE s.id = ? AND s.cerrado_en IS NULL AND s.fecha = ? AND p.activo = 1`,
-  ).get(sesionId, hoy()) as Persona | undefined;
+/** Quién está usando el sistema, tenga turno abierto o no. */
+export async function usuarioActual(): Promise<Persona | null> {
+  const c = await cookies();
+  const id = abrir(c.get(COOKIE)?.value);
+  if (!id) return null;
+  const p = db
+    .prepare("SELECT * FROM personas WHERE id = ? AND activo = 1")
+    .get(id) as Persona | undefined;
   return p ?? null;
 }
 
-/** Sesión de turno abierta hoy por esa persona. */
-export function sesionAbierta(personaId: number): SesionTurno | undefined {
-  return db.prepare(
-    `SELECT * FROM sesiones_turno
-     WHERE persona_id = ? AND cerrado_en IS NULL AND fecha = ?
-     ORDER BY id DESC LIMIT 1`,
-  ).get(personaId, hoy()) as SesionTurno | undefined;
+/** Igual que el anterior, pero solo si puede gestionar el laboratorio. */
+export async function encargadoActual(): Promise<Persona | null> {
+  const p = await usuarioActual();
+  return p?.es_encargado ? p : null;
+}
+
+/** Lanza si quien está conectado no es encargado. Para usar en las acciones. */
+export async function exigirEncargado(): Promise<Persona> {
+  const p = await encargadoActual();
+  if (!p) throw new Error("Esto lo puede hacer solo el encargado.");
+  return p;
+}
+
+/** Lanza si no hay nadie identificado. */
+export async function exigirUsuario(): Promise<Persona> {
+  const p = await usuarioActual();
+  if (!p) throw new Error("Entra con tu nombre y tu PIN para hacer esto.");
+  return p;
 }
 
 /**
- * Abre el turno y deja constancia de la hora real de inicio. Esa marca es la
- * base de los honorarios y la que permite ver después quién hizo reemplazo.
+ * Inicia sesión. `conTurno` decide si además se abre el turno: un ayudante que
+ * llega a trabajar lo abre; el encargado que pasa a corregir algo, no.
  */
-export async function abrirTurno(personaId: number, pin: string): Promise<Persona> {
+export async function iniciarSesion(
+  personaId: number,
+  pin: string,
+  conTurno: boolean,
+): Promise<Persona> {
   const p = db
     .prepare("SELECT * FROM personas WHERE id = ? AND activo = 1")
     .get(personaId) as Persona | undefined;
-  if (!p) throw new Error("Ayudante no encontrado");
+  if (!p) throw new Error("Persona no encontrada");
   if (p.rol !== "ayudante" && p.rol !== "tecnico") {
-    throw new Error("Solo ayudantes o técnicos pueden abrir turno");
+    throw new Error("Solo ayudantes o técnicos pueden entrar al sistema");
   }
+
   revisarBloqueo(p.id);
   if (!verificarPin(pin, p.pin)) {
     anotarFallo(p.id);
@@ -103,48 +124,56 @@ export async function abrirTurno(personaId: number, pin: string): Promise<Person
   }
   limpiarIntentos(p.id);
 
-  let sesion = sesionAbierta(p.id);
-  if (!sesion) {
-    const bloque = bloqueTurnoEn();
-    const info = db.prepare(
-      "INSERT INTO sesiones_turno (persona_id, fecha, abierto_en, nota) VALUES (?,?,?,?)",
-    ).run(p.id, hoy(), ahora(), bloque ? null : "Apertura fuera de bloque");
-    sesion = { id: Number(info.lastInsertRowid) } as SesionTurno;
-  }
-
   const c = await cookies();
-  c.set(COOKIE, firmar(sesion.id), {
+  c.set(COOKIE, firmar(p.id), {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 12,
   });
+
+  if (conTurno) marcarInicioTurno(p.id);
   return p;
 }
 
-export async function cerrarTurno() {
+export async function cerrarSesion() {
   const c = await cookies();
-  const sesionId = abrir(c.get(COOKIE)?.value);
-  if (sesionId) {
-    db.prepare(
-      "UPDATE sesiones_turno SET cerrado_en = ? WHERE id = ? AND cerrado_en IS NULL",
-    ).run(ahora(), sesionId);
-  }
   c.delete(COOKIE);
 }
 
-/**
- * El encargado puede anular préstamos y editar el horario y los turnos.
- * Hoy es una sola persona; se marca en la pantalla de Personas.
- */
-export async function encargadoEnTurno(): Promise<Persona | null> {
-  const p = await ayudanteEnTurno();
-  return p?.es_encargado ? p : null;
+// ------------------------------------------------------------------ turnos
+
+/** Turno abierto hoy por esa persona. */
+export function turnoAbiertoDe(personaId: number): SesionTurno | undefined {
+  return db.prepare(
+    `SELECT * FROM sesiones_turno
+     WHERE persona_id = ? AND cerrado_en IS NULL AND fecha = ?
+     ORDER BY id DESC LIMIT 1`,
+  ).get(personaId, hoy()) as SesionTurno | undefined;
 }
 
-/** Lanza si quien está en turno no es el encargado. Para usar en las acciones. */
-export async function exigirEncargado(): Promise<Persona> {
-  const p = await encargadoEnTurno();
-  if (!p) throw new Error("Esto lo puede hacer solo el encargado. Habla con él.");
-  return p;
+/** Deja constancia de la hora real de inicio. Si ya estaba abierto, no hace nada. */
+export function marcarInicioTurno(personaId: number): SesionTurno {
+  const ya = turnoAbiertoDe(personaId);
+  if (ya) return ya;
+
+  const bloque = bloqueTurnoEn();
+  const info = db.prepare(
+    "INSERT INTO sesiones_turno (persona_id, fecha, abierto_en, nota) VALUES (?,?,?,?)",
+  ).run(personaId, hoy(), ahora(), bloque ? null : "Apertura fuera de bloque");
+  return turnoAbiertoDe(personaId) ?? ({ id: Number(info.lastInsertRowid) } as SesionTurno);
+}
+
+export function marcarFinTurno(personaId: number) {
+  const s = turnoAbiertoDe(personaId);
+  if (s) {
+    db.prepare("UPDATE sesiones_turno SET cerrado_en = ? WHERE id = ?").run(ahora(), s.id);
+  }
+}
+
+/** Quien está conectado Y con el turno abierto. Null si solo vino a mirar. */
+export async function usuarioEnTurno(): Promise<Persona | null> {
+  const p = await usuarioActual();
+  if (!p) return null;
+  return turnoAbiertoDe(p.id) ? p : null;
 }

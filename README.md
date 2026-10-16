@@ -69,12 +69,20 @@ No trae PIN, préstamos, turnos realizados ni bitácora. Se regenera con
 | **Bitácora** | El muro donde los ayudantes se dejan recados, más los avisos que genera el sistema. |
 | **Encargado** | Toda la gestión, separada: inventario, categorías, ubicaciones, personas, horas y exportaciones. |
 
-### Abrir turno
+### Entrar y abrir turno son dos cosas distintas
 
-El ayudante elige su nombre y escribe su PIN de 4 dígitos. Queda registrada la
-hora real de inicio, y al cerrar la de término. Esa marca es la que permite ver
-después **quién hizo reemplazo**: las horas se cuentan contra quien abrió, no
-contra el horario.
+Al entrar se elige el nombre y se escribe el PIN de 4 dígitos, y aparecen dos
+botones:
+
+- **Entrar y abrir turno** — para el ayudante que llega a trabajar. Queda
+  registrada la hora real de inicio, y al cerrarlo la de término. Esa marca es
+  la que permite ver después **quién hizo reemplazo**: las horas se cuentan
+  contra quien abrió el turno, no contra el horario.
+- **Solo entrar** — identificarse sin que cuente como turno trabajado. Es lo
+  que usa el encargado cuando pasa a revisar o corregir algo.
+
+Quien entró sin turno puede abrirlo después, con el botón de la cabecera. Lo que
+da permisos es haber entrado; abrir turno solo suma horas.
 
 ### Prestar
 
@@ -133,7 +141,8 @@ de a poco sin perder el hilo.
 
 Toda la gestión vive bajo `/encargado`, separada de la vista diaria. El permiso
 se marca con una casilla en la ficha de la persona, y se comprueba en el
-servidor: esconder los botones no basta.
+servidor: esconder los botones no basta. **No hace falta tener turno abierto**
+para gestionar: basta con haber entrado.
 
 ### Exportar
 
@@ -150,9 +159,10 @@ Lo que ya está resuelto:
 - **Los PIN no se guardan en claro.** Se almacena un hash scrypt con sal. No
   están en el repositorio: se generan al azar en cada instalación y se muestran
   una sola vez. Si alguien lo olvida, el encargado le pone uno nuevo.
-- **La cookie de sesión va firmada** (HMAC-SHA256) y apunta a la sesión de turno,
-  no a la persona. No se puede inventar, y una cookie de un turno anterior no
-  sirve porque esa sesión ya está cerrada. La clave se genera sola en `data/`.
+- **La cookie de sesión va firmada** (HMAC-SHA256). No se puede inventar: antes
+  llevaba el número de la persona en claro y bastaba escribirlo en el navegador
+  para entrar como esa persona. La clave se genera sola en `data/` y dura 12
+  horas.
 - **Freno a la fuerza bruta**: cinco PIN errados bloquean la cuenta cinco
   minutos. El contador vive en la base, porque el servidor atiende con varios
   procesos y uno en memoria no se comparte.
@@ -283,6 +293,9 @@ Los cambios de forma de la base se aplican solos al arrancar
   la de clases y nunca calzarían.
 - **Turno programado contra turno real**: `turnos` es el horario oficial,
   `sesiones_turno` es lo que pasó. De la diferencia salen los reemplazos.
+- **Identidad y turno van separados**: la sesión dice quién eres y da permisos;
+  el turno es un registro de horas aparte. Mezclarlos obligaba al encargado a
+  fichar una jornada solo para corregir un dato.
 - **Nada se borra**: un préstamo mal registrado se *anula* —queda con quién y por
   qué, y libera el stock—, y un equipo que ya no está se da de baja.
 - **La bitácora es histórica**: el resumen «desde el último turno» solo marca qué

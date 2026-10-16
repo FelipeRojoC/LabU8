@@ -2,15 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { borrarNota, escribirNota, marcarVista } from "@/lib/queries/novedades";
-import { ayudanteEnTurno, exigirEncargado } from "@/lib/session";
+import { usuarioActual, exigirEncargado } from "@/lib/session";
 
 export interface Resultado { ok: boolean; error?: string }
 
 /** Nota para el turno siguiente. */
 export async function escribirNotaAction(_prev: Resultado, fd: FormData): Promise<Resultado> {
   try {
-    const p = await ayudanteEnTurno();
-    if (!p) return { ok: false, error: "Abre tu turno para dejar una nota" };
+    const p = await usuarioActual();
+    if (!p) return { ok: false, error: "Entra con tu nombre y tu PIN para dejar un recado" };
     const texto = String(fd.get("texto") ?? "").trim();
     if (texto.length < 3) return { ok: false, error: "Escribe algo más que eso" };
     escribirNota(p.id, texto);
@@ -22,7 +22,7 @@ export async function escribirNotaAction(_prev: Resultado, fd: FormData): Promis
 }
 
 export async function borrarNotaAction(fd: FormData) {
-  const p = await ayudanteEnTurno();
+  const p = await usuarioActual();
   if (!p) return;
   borrarNota(Number(fd.get("id")), p.id);
   revalidatePath("/");

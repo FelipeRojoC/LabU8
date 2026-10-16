@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
-import { encargadoEnTurno } from "@/lib/session";
+import { encargadoActual } from "@/lib/session";
 
 /**
  * Todo lo de gestión vive bajo /encargado para que no se mezcle con la vista
@@ -11,7 +11,7 @@ export default async function EncargadoLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const encargado = await encargadoEnTurno();
+  const encargado = await encargadoActual();
 
   if (!encargado) {
     return (
@@ -19,8 +19,9 @@ export default async function EncargadoLayout({
         <ShieldCheck size={28} className="mx-auto text-muted" aria-hidden />
         <h1 className="text-lg font-semibold">Área del encargado</h1>
         <p className="text-sm text-muted">
-          Esta parte es solo para el encargado del laboratorio. Abre tu turno con
-          tu cuenta desde el botón de arriba a la derecha.
+          Esta parte es solo para el encargado del laboratorio. Entra con tu
+          cuenta desde el botón de arriba a la derecha. No hace falta abrir
+          turno: puedes entrar solo a revisar o corregir.
         </p>
         <Link href="/" className="btn btn-ghost">Volver al panel</Link>
       </div>

@@ -5,7 +5,7 @@ import {
   resumenInventario,
 } from "@/lib/queries/items";
 import { Foto } from "@/components/Foto";
-import { encargadoEnTurno } from "@/lib/session";
+import { encargadoActual } from "@/lib/session";
 import { Pill, Vacio } from "@/components/ui";
 import { FiltrosInventario } from "@/components/FiltrosInventario";
 
@@ -41,7 +41,7 @@ export default async function Inventario({
   const marcas = listarMarcas();
   const duenos = listarDuenos();
   const resumen = resumenInventario();
-  const encargado = await encargadoEnTurno();
+  const encargado = await encargadoActual();
   const hayFiltro = Object.values(sp).some(Boolean);
 
   return (

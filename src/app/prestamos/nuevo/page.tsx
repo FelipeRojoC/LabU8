@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { NuevoPrestamoForm } from "@/components/NuevoPrestamoForm";
 import { listarItems } from "@/lib/queries/items";
-import { ayudanteEnTurno } from "@/lib/session";
+import { usuarioActual } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +26,7 @@ export default async function NuevoPrestamo({
       <NuevoPrestamoForm
         items={disponibles}
         preseleccion={sp.item ? Number(sp.item) : undefined}
-        ayudante={await ayudanteEnTurno()}
+        ayudante={await usuarioActual()}
       />
     </div>
   );

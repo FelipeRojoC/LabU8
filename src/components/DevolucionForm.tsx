@@ -38,7 +38,7 @@ export function DevolucionForm({
 
       {!ayudante && (
         <p className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900">
-          Abre tu turno arriba a la derecha para poder recibir devoluciones.
+          Entra con tu nombre y tu PIN, arriba a la derecha, para recibir devoluciones.
         </p>
       )}
 

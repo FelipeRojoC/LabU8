@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { ArrowLeft, MessageSquare } from "lucide-react";
 import { contarNovedades, desdeElUltimoTurno, listarNovedades } from "@/lib/queries/novedades";
-import { ayudanteEnTurno } from "@/lib/session";
+import { usuarioActual } from "@/lib/session";
 import { NotaTurnoForm } from "@/components/Bitacora";
 import { ListaNovedades } from "@/components/ListaNovedades";
 
 export const dynamic = "force-dynamic";
 
 export default async function Bitacora() {
-  const yo = await ayudanteEnTurno();
+  const yo = await usuarioActual();
   const resumen = desdeElUltimoTurno();
   const novedades = listarNovedades(300);
   const total = contarNovedades();
