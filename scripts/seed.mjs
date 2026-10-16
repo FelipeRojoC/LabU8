@@ -8,6 +8,7 @@ import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
 import { migrar } from "../src/lib/migrar.mjs";
+import { generarPin, hashPin } from "../src/lib/pin.mjs";
 
 const RESET = process.argv.includes("--reset");
 const DATA_DIR = process.env.LABU8_DATA_DIR ?? path.join(process.cwd(), "data");
@@ -102,33 +103,40 @@ const insPersona = db.prepare(
   `INSERT INTO personas (nombre,rol,pin,carrera,email,es_encargado) VALUES (?,?,?,?,?,?)`,
 );
 const existePersona = db.prepare("SELECT id FROM personas WHERE nombre = ?");
-function persona(nombre, rol, pin = null, carrera = null, email = null, encargado = 0) {
+
+// Los PIN se generan al azar en cada instalación y se muestran una sola vez al
+// final. No viven en el repositorio: acá solo queda el código que los crea.
+const pinesGenerados = [];
+
+function persona(nombre, rol, { conPin = false, carrera = null, email = null, encargado = 0 } = {}) {
   const e = existePersona.get(nombre);
-  return e
-    ? e.id
-    : Number(insPersona.run(nombre, rol, pin, carrera, email, encargado).lastInsertRowid);
+  if (e) return e.id;
+  let pin = null;
+  if (conPin) {
+    const claro = generarPin();
+    pinesGenerados.push([nombre, claro, encargado]);
+    pin = hashPin(claro);
+  }
+  return Number(insPersona.run(nombre, rol, pin, carrera, email, encargado).lastInsertRowid);
 }
 for (const d of DOCENTES) persona(d, "docente");
 
 // --------------------------------------------- ayudantes y sus turnos
 // Horario de ayudantes (grilla propia: entran a las 8:00, antes de la clase
 // de las 8:10). PIN inicial de cada uno — cámbialos en /personas.
-const AYUDANTES = [
-  ["Vicente",   "2101"],
-  ["Guillermo", "2102"],
-  ["Nicole",    "2103"],
-  ["Dayris",    "2104"],
-  ["Adriana",   "2105"],
-  ["Adrian",    "2106"],
-];
+const AYUDANTES = ["Vicente", "Guillermo", "Nicole", "Dayris", "Adriana", "Adrian"];
 // Encargados del laboratorio: los únicos que pueden anular préstamos y tocar
-// el horario. Cambia los nombres y los PIN desde /personas.
-persona("Way", "ayudante", "123", "Encargada del laboratorio", null, 1);
-persona("Felipe Rojo", "ayudante", "9090", "Encargado del laboratorio",
-        "felipe.rojo@alumnos.ucn.cl", 1);
+// el horario.
+const ENCARGADOS = ["Felipe Rojo", "Way-Yeng"];
+for (const n of ENCARGADOS) {
+  persona(n, "ayudante", { conPin: true, carrera: "Encargado del laboratorio", encargado: 1 });
+}
 
 const idAyudante = new Map(
-  AYUDANTES.map(([n, pin]) => [n, persona(n, "ayudante", pin, "Ayudantía Electrotecnia")]),
+  AYUDANTES.map((n) => [
+    n,
+    persona(n, "ayudante", { conPin: true, carrera: "Ayudantía Electrotecnia" }),
+  ]),
 );
 
 // Los bloques de ayudantía, con los nombres que se usan en el laboratorio.
@@ -240,4 +248,12 @@ console.log(
   `listo → bloques:${cuenta("bloques")}/${cuenta("bloques_turno")} clases:${cuenta("clases")} ` +
   `personas:${cuenta("personas")} turnos:${cuenta("turnos")} items:${cuenta("items")}`,
 );
+
+if (pinesGenerados.length) {
+  console.log("\n  PIN iniciales — anótalos AHORA, no se pueden volver a ver:\n");
+  for (const [nombre, pin, encargado] of pinesGenerados) {
+    console.log(`    ${nombre.padEnd(14)} ${pin}${encargado ? "   (encargado)" : ""}`);
+  }
+  console.log("\n  Se guardan cifrados. Para cambiarlos: Encargado → Personas.\n");
+}
 db.close();

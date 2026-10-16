@@ -9,7 +9,7 @@ import { migrar } from "@/lib/migrar.mjs";
  * ese directorio como volumen persistente.
  */
 
-const DATA_DIR = process.env.LABU8_DATA_DIR
+export const DATA_DIR = process.env.LABU8_DATA_DIR
   ? path.resolve(process.env.LABU8_DATA_DIR)
   : path.join(process.cwd(), "data");
 

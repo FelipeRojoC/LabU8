@@ -50,11 +50,20 @@ export function PersonaForm({ persona }: { persona?: Persona }) {
         <Campo etiqueta="Carrera" className="col-span-2">
           <input name="carrera" defaultValue={persona?.carrera ?? ""} className="input-base" />
         </Campo>
-        <Campo etiqueta="PIN del turno" hint="Solo ayudantes y técnicos" className="col-span-2">
+        <Campo
+          etiqueta="PIN del turno"
+          hint={
+            persona?.pin
+              ? "Tiene uno puesto. Escribe 4 dígitos solo si quieres reemplazarlo."
+              : "4 dígitos. Se guarda cifrado: después no se puede volver a leer."
+          }
+          className="col-span-2"
+        >
           <input
-            name="pin" inputMode="numeric" maxLength={8}
-            defaultValue={persona?.pin ?? ""} className="input-base font-mono"
-            placeholder="4 dígitos"
+            name="pin" inputMode="numeric" maxLength={4} pattern="\d{4}"
+            className="input-base font-mono"
+            placeholder={persona?.pin ? "••••  (sin cambios)" : "4 dígitos"}
+            autoComplete="off"
           />
         </Campo>
       </div>

@@ -13,6 +13,10 @@ export function BarraTurno({
   actual, ayudantes, desde,
 }: { actual: Persona | null; ayudantes: Persona[]; desde: string | null }) {
   const [abierto, setAbierto] = useState(false);
+  // La persona elegida vive en el estado: si el PIN sale malo, el formulario
+  // se vuelve a dibujar y un <select> sin control perdería la selección,
+  // obligando a buscarse de nuevo en la lista.
+  const [personaId, setPersonaId] = useState("");
   const [estado, formAction] = useActionState(abrirTurnoAction, { ok: false });
 
   if (actual) {
@@ -51,15 +55,19 @@ export function BarraTurno({
             </p>
           ) : (
             <form action={formAction} className="space-y-3">
-              <select name="persona_id" className="input-base" required defaultValue="">
+              <select
+                name="persona_id" className="input-base" required
+                value={personaId} onChange={(e) => setPersonaId(e.target.value)}
+              >
                 <option value="" disabled>Selecciona…</option>
                 {ayudantes.map((a) => (
                   <option key={a.id} value={a.id}>{a.nombre}</option>
                 ))}
               </select>
               <input
-                name="pin" type="password" inputMode="numeric" placeholder="PIN"
-                className="input-base" autoComplete="off"
+                name="pin" type="password" inputMode="numeric" placeholder="PIN de 4 dígitos"
+                maxLength={4} className="input-base text-center font-mono tracking-[0.4em]"
+                autoComplete="off" required
               />
               {estado.error && <p className="text-xs text-red-700">{estado.error}</p>}
               <button className="btn btn-primary w-full">Entrar</button>

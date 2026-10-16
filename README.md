@@ -1,213 +1,313 @@
-# Laboratorio de Electrotecnia U8 — Inventario y préstamos
+# Laboratorio de Electrotecnia U8
 
-Sistema local para el laboratorio: inventario con fotos, registro de salidas y
-devoluciones, y el horario de clases con los turnos de los ayudantes.
+Sistema interno del laboratorio: inventario con fotos, préstamo y devolución de
+equipos, horario de clases y de ayudantes, registro de turnos y una bitácora
+donde un turno le deja dicho al siguiente qué pasó.
 
-## Cómo levantarlo
+Es una sola aplicación Node con su base de datos en un archivo. No necesita
+motor de base de datos, ni Redis, ni servicio de correo, ni nada externo.
+
+---
+
+## 1. Instalación
+
+Requisito único: **Node.js 20 o superior**.
 
 ```bash
-npm install
-npm run seed      # bloques, horario de clases, categorías e inventario base
-npm run dev       # http://localhost:3000
-```
-
-Para producción local o en el servidor:
-
-```bash
+git clone https://github.com/FelipeRojoC/LabU8.git labu8
+cd labu8
+npm ci
 npm run build
-npm start
+npm run seed      # carga horario, catálogos e inventario
+npm start         # http://localhost:3000
 ```
 
-`npm run reset` vacía la base y vuelve a cargar la semilla (borra los préstamos).
+`npm run seed` imprime **una sola vez** los PIN de cada ayudante. Anótalos en
+ese momento: se guardan cifrados y después no se pueden volver a leer, solo
+reemplazar desde la propia aplicación.
 
-## Cómo se usa
+Para que lo vean otros computadores de la misma red:
 
-1. **Abrir turno** (arriba a la derecha). El ayudante elige su nombre y escribe su
-   PIN. Queda registrado como quien entrega y quien recibe cada equipo, y se
-   guarda la hora real de inicio. Al cerrar el turno se guarda la de término.
-2. **Panel**: lo primero que se ve es qué pasó desde el último turno —cuántas
-   salidas y devoluciones hubo— y la **bitácora**: los recados que se han ido
-   dejando entre ayudantes. Queda guardada y la ve cualquiera que entre, esté o
-   no de turno; escribir sí requiere turno abierto. En `/bitacora` está el
-   historial completo. Arriba de todo aparecen las incidencias que el encargado
-   todavía no revisa.
-3. **Registrar salida** (`/prestamos/nuevo`): se buscan los equipos, se busca a
-   la persona **por nombre o RUT** y se escribe la fecha de devolución (siempre
-   obligatoria, sin valor sugerido). Si la persona no existe se crea ahí mismo,
-   y el RUT y el correo son obligatorios: son el respaldo si pasa algo.
-4. **Devolución**: desde la lista de préstamos, «Devolver todo» en un clic. Si
-   volvió solo una parte o algo llegó dañado, se entra al préstamo y se marca
-   línea por línea. «Dañado» manda el equipo a mantenimiento, «perdido» lo
-   descuenta del stock, y **en los dos casos le avisa al encargado**.
-5. **Inventario** (`/inventario`): de consulta para todos. Se busca por nombre,
-   código, **categoría, ubicación, dueño o estado**, y el buscador sugiere
-   mientras se escribe: escribir «resi» ofrece primero la categoría Resistencias
-   entera y después los ítems sueltos. Los filtros se aplican solos al elegirlos,
-   sin botón de por medio.
-   **Modificar el inventario es solo del encargado**, en `/encargado/inventario`:
-   agregar, editar, subir fotos, ajustar stock y eliminar. Ahí también está la
-   «Carga rápida», pensada para recorrer un estante: se fija la ubicación una vez
-   y después es solo nombre, cantidad y Enter.
-6. **Material de docentes**: lo que un profesor deja guardado en los estantes
-   entra ítem por ítem con su nombre en el campo «Dueño». Se presta igual que el
-   resto, pero siempre queda claro de quién es y quién se lo llevó.
-7. **Horario** (`/horario`): dos tablas separadas, porque los ayudantes tienen su
-   propia grilla — entran a las 8:00, antes de que empiecen las clases a las 8:10.
-   Arriba los turnos de ayudantes (A, B, C, ALMUERZO, D, E, F), abajo las clases
-   (bloques A–G). Las letras se repiten entre las dos tablas a propósito, porque
-   así se habla en el laboratorio; al lado de cada una va su horario, que es lo
-   que las distingue. El bloque en curso se marca en verde.
-8. **Registro de turnos** (`/registro`): quién abrió, a qué hora, cuántos bloques
-   cubrió y cuántas horas suma en el mes. Las horas se cuentan contra la apertura
-   real, no contra el horario, así que **un reemplazo queda a nombre de quien
-   efectivamente abrió** y aparece marcado como tal.
+```bash
+npx next start -H 0.0.0.0 -p 3000
+```
 
-### El inventario de partida
+### Dónde viven los datos
 
-Sale de la planilla real del laboratorio (`Inventario U8 - Septiembre 2026.xlsx`,
-hoja INVENTARIO), convertida a [`db/inventario-inicial.json`](db/inventario-inicial.json):
-102 productos y 1.083 unidades, con su ubicación y el precio donde la planilla
-lo traía. Todo es editable desde la aplicación; el JSON solo se usa en la carga
-inicial.
+Todo —base de datos, fotos y la clave que firma las sesiones— queda en `data/`,
+o en el directorio que indique la variable `LABU8_DATA_DIR`. Es lo único que hay
+que respaldar y lo único que no está en el repositorio.
 
-Ojo: la planilla cubre **solo los componentes** (resistencias). Los equipos
-—multímetros, osciloscopios, fuentes— hay que cargarlos aparte con «Carga
-rápida» o «Agregar ítem».
+```bash
+LABU8_DATA_DIR=/var/lib/labu8 npm start
+```
 
-### Quién puede hacer qué
+### Cargar la base desde el SQL
+
+[`db/labu8.sql`](db/labu8.sql) trae el esquema completo y los datos de
+referencia: el horario de clases, los turnos de ayudantes, las categorías, las
+ubicaciones y los 102 productos del inventario. Sirve para levantar la base en
+otra parte sin pasar por el seed:
+
+```bash
+sqlite3 data/labu8.db < db/labu8.sql
+```
+
+No trae PIN, préstamos, turnos realizados ni bitácora. Se regenera con
+`npm run sql` cuando cambien los datos de referencia.
+
+---
+
+## 2. Qué hace la página
+
+| Pantalla | Para qué |
+| --- | --- |
+| **Panel** | Lo primero que ve quien llega: qué turno corre y quién lo abrió, qué clase hay en la sala, qué está prestado, los turnos que nadie abrió y la bitácora. |
+| **Inventario** | Consulta. Busca por nombre, código, categoría, ubicación, dueño o estado, y sugiere mientras escribes. |
+| **Préstamos** | Registrar salidas y recibir devoluciones. |
+| **Horario** | Dos tablas: los turnos de ayudantes y las clases del laboratorio. El bloque en curso se marca en verde. |
+| **Bitácora** | El muro donde los ayudantes se dejan recados, más los avisos que genera el sistema. |
+| **Encargado** | Toda la gestión, separada: inventario, categorías, ubicaciones, personas, horas y exportaciones. |
+
+### Abrir turno
+
+El ayudante elige su nombre y escribe su PIN de 4 dígitos. Queda registrada la
+hora real de inicio, y al cerrar la de término. Esa marca es la que permite ver
+después **quién hizo reemplazo**: las horas se cuentan contra quien abrió, no
+contra el horario.
+
+### Prestar
+
+Se buscan los equipos, se busca a la persona por nombre o RUT y se escribe la
+fecha de devolución (siempre obligatoria, sin valor sugerido). Si la persona no
+está, se crea en el momento: el RUT y el correo son obligatorios, son el
+respaldo si pasa algo.
+
+**Quien tiene préstamos vencidos sin devolver queda bloqueado** y no puede
+llevarse nada más hasta devolver.
+
+### Devolver
+
+«Devolver todo» en un clic desde la lista. Si volvió solo una parte o algo llegó
+dañado, se entra al préstamo y se marca línea por línea: *dañado* manda el
+equipo a mantenimiento, *perdido* lo descuenta del stock, y los dos **avisan al
+encargado** con una incidencia que queda pendiente hasta que la revise.
+
+### Horario
+
+Los ayudantes tienen su propia grilla —entran a las 8:00, antes de que empiecen
+las clases a las 8:10—, así que van en dos tablas separadas:
+
+- Turnos de ayudantes: **A, B, C, ALMUERZO, D, E, F**
+- Clases: **bloques A a G**
+
+Las letras se repiten entre ambas a propósito, porque así se habla en el
+laboratorio; al lado de cada una va su horario, que es lo que las distingue.
+
+### Inventario
+
+El catálogo de partida sale de la planilla real del laboratorio: 102 productos y
+1.083 unidades, con su ubicación y el precio donde la planilla lo traía. La
+planilla cubre solo los componentes; los equipos —multímetros, osciloscopios,
+fuentes— hay que cargarlos con «Agregar ítem» o con «Carga rápida», pensada para
+recorrer un estante: se fija la ubicación una vez y después es solo nombre,
+cantidad y Enter.
+
+Los atajos de «sin foto» y «sin ubicación» sirven para ir cerrando el inventario
+de a poco sin perder el hilo.
+
+---
+
+## 3. Quién puede hacer qué
 
 | | Ayudante | Encargado |
 | --- | :---: | :---: |
+| Consultar inventario, horario y bitácora | sí | sí |
 | Prestar y recibir devoluciones | sí | sí |
-| Consultar el inventario | sí | sí |
-| Agregar, editar o borrar ítems, y subir fotos | no | sí |
 | Dejar recados en la bitácora | sí | sí |
-| Ver todo | sí | sí |
+| Agregar, editar o borrar ítems, y subir fotos | no | sí |
 | **Anular** un préstamo mal registrado | no | sí |
 | Editar el horario y los turnos | no | sí |
 | Dar por revisada una incidencia | no | sí |
 | Exportar a Excel | no | sí |
 
-El encargado se marca con una casilla en la ficha de la persona.
-
-Todo lo de gestión vive bajo **`/encargado`**, separado de la vista diaria del
-ayudante: ahí están las categorías y ubicaciones, las personas, el registro de
-horas y las exportaciones. Los ayudantes no ven ese menú. El permiso se
-comprueba una sola vez en `src/app/encargado/layout.tsx`.
-
-### Quien debe equipos no puede llevarse más
-
-Si alguien tiene préstamos vencidos sin devolver, el sistema **bloquea** la nueva
-salida y le dice al ayudante que hable con el encargado. No hay forma de saltarse
-el bloqueo desde la aplicación; la única salida es devolver lo que debe, o que el
-encargado anule el préstamo pendiente. Si esto resulta demasiado rígido en la
-práctica, el bloqueo está en un solo lugar: `crearPrestamo()`, en
-`src/lib/queries/prestamos.ts`.
+Toda la gestión vive bajo `/encargado`, separada de la vista diaria. El permiso
+se marca con una casilla en la ficha de la persona, y se comprueba en el
+servidor: esconder los botones no basta.
 
 ### Exportar
 
-El encargado tiene un botón de descarga en Inventario, Préstamos y Registro de
+El encargado tiene botones de descarga en Inventario, Préstamos y Registro de
 turnos. Sale un CSV con BOM y separador `;`, que es lo que Excel en español abre
 sin romper las tildes.
 
-### Ayudantes y PIN inicial
+---
 
-Los seis ayudantes del horario vienen cargados con un PIN inicial distinto cada
-uno, definido en `scripts/seed.mjs` (constante `AYUDANTES`). Cámbialos en
-`/personas` antes de usar el sistema en serio: el PIN es lo único que separa un
-turno abierto por una persona de otro.
+## 4. Seguridad
 
-### Cómo se cuentan las horas
+Lo que ya está resuelto:
 
-- Un bloque cuenta cuando el turno lo cubre al menos 15 minutos. Abrir cinco
-  minutos antes de que termine un bloque ajeno no lo convierte en trabajado.
-- Un bloque se cuenta **completo** aunque la apertura haya sido más tarde. El
-  atraso queda registrado aparte, solo como información.
-- Un turno muy corto igual suma el bloque en que se abrió, nunca cero.
-- Si alguien olvida cerrar, solo cuenta el bloque de apertura y aparece como
-  «sin cerrar», con un campo para completar la hora real de término.
+- **Los PIN no se guardan en claro.** Se almacena un hash scrypt con sal. No
+  están en el repositorio: se generan al azar en cada instalación y se muestran
+  una sola vez. Si alguien lo olvida, el encargado le pone uno nuevo.
+- **La cookie de sesión va firmada** (HMAC-SHA256) y apunta a la sesión de turno,
+  no a la persona. No se puede inventar, y una cookie de un turno anterior no
+  sirve porque esa sesión ya está cerrada. La clave se genera sola en `data/`.
+- **Freno a la fuerza bruta**: cinco PIN errados bloquean la cuenta cinco
+  minutos. El contador vive en la base, porque el servidor atiende con varios
+  procesos y uno en memoria no se comparte.
+- Las escrituras comprueban el permiso en el servidor, no en la interfaz.
+- Las fotos se sirven por nombre plano; no se puede salir del directorio.
 
-## Estructura
+Lo que **falta decidir** antes de abrirlo a la red:
 
-| Ruta | Qué hace |
+- **No hay inicio de sesión institucional.** Cualquiera que llegue a la URL ve
+  el inventario y puede registrar préstamos. Las opciones son restringir el
+  acceso a la red del laboratorio (lista blanca de IP en nginx) o ponerlo detrás
+  del SSO de la universidad.
+- **Datos personales**: se guardan nombre, RUT, correo y teléfono de quien
+  retira equipos. Conviene confirmar con la universidad qué corresponde guardar
+  y por cuánto tiempo.
+
+---
+
+## 5. Puesta en el servidor UCN
+
+### Qué pedirle a informática
+
+| | Qué pedir | Por qué |
+|---|---|---|
+| **Servidor** | VM o contenedor Linux (Ubuntu 22.04+, Debian 12 o Rocky 9), 1 vCPU, 2 GB RAM, 20 GB de disco | La aplicación es liviana; el disco crece sobre todo por las fotos |
+| **Node.js** | 20 LTS o superior | Es el único runtime que se necesita |
+| **Usuario** | Una cuenta de sistema sin login, por ejemplo `labu8` | Para que el servicio no corra como root |
+| **Directorio** | `/var/lib/labu8`, del usuario `labu8`, **con respaldo diario** | Ahí viven la base, las fotos y la clave de sesiones. Es lo único irrecuperable |
+| **DNS** | Un registro interno, por ejemplo `labu8.ucn.cl` | Para no andar con direcciones IP |
+| **TLS** | El certificado institucional para ese nombre | Para servir por HTTPS |
+| **Proxy** | nginx hacia `127.0.0.1:3000` | El proceso Node no debe quedar expuesto directo |
+| **Red** | Acceso solo desde la red de la universidad o VPN | Ver la sección de seguridad |
+| **Zona horaria** | `America/Santiago` | Los turnos y los plazos se calculan en hora local |
+| **Internet** | Solo durante la instalación y las actualizaciones | Para `npm ci` y las tipografías del build |
+
+Si el servidor no tiene salida a internet: abrirla temporalmente a
+`registry.npmjs.org`, `fonts.googleapis.com` y `fonts.gstatic.com` durante la
+instalación, o compilar en otro equipo y copiar el proyecto ya construido. Una
+vez compilada, **la aplicación no necesita internet para funcionar**.
+
+### Instalación
+
+```bash
+# como root
+adduser --system --group --home /opt/labu8 labu8
+mkdir -p /var/lib/labu8 && chown labu8:labu8 /var/lib/labu8
+
+# como labu8
+cd /opt && git clone https://github.com/FelipeRojoC/LabU8.git labu8 && cd labu8
+npm ci && npm run build
+LABU8_DATA_DIR=/var/lib/labu8 npm run seed     # anota los PIN que imprime
+```
+
+### Servicio y proxy
+
+Los archivos están listos en [`deploy/`](deploy):
+
+```bash
+cp deploy/labu8.service /etc/systemd/system/
+systemctl daemon-reload && systemctl enable --now labu8
+journalctl -u labu8 -f        # ver los registros
+```
+
+De la configuración de nginx, lo que no puede faltar:
+
+- `proxy_pass http://127.0.0.1:3000`
+- `client_max_body_size 12M` — **si falta, las fotos de los equipos fallan al
+  subirse** y no es obvio por qué.
+
+### Respaldo
+
+Lo único que hay que respaldar es `/var/lib/labu8`. El archivo `.db` no se puede
+copiar en caliente con `cp`: hay que usar el respaldo propio de SQLite.
+
+```bash
+#!/bin/sh
+# /usr/local/bin/labu8-backup — en cron diario
+DEST=/var/backups/labu8/$(date +%F)
+mkdir -p "$DEST"
+sqlite3 /var/lib/labu8/labu8.db ".backup '$DEST/labu8.db'"
+tar czf "$DEST/uploads.tar.gz" -C /var/lib/labu8 uploads
+find /var/backups/labu8 -maxdepth 1 -type d -mtime +30 -exec rm -rf {} +
+```
+
+### Actualizar
+
+```bash
+cd /opt/labu8
+git pull
+npm ci
+npm run build
+systemctl restart labu8
+```
+
+Los cambios de forma de la base se aplican solos al arrancar
+(`src/lib/migrar.mjs`). Aun así, conviene respaldar antes.
+
+---
+
+## 6. Cómo está hecho
+
+| Ruta | Qué hay |
 | --- | --- |
 | `db/schema.sql` | Esquema completo de la base |
-| `scripts/seed.mjs` | Carga inicial (horario, categorías, inventario base) |
-| `src/lib/db.ts` | Conexión SQLite, bitácora, utilidades de fecha |
+| `db/labu8.sql` | Esquema + datos de referencia, para cargar en otra parte |
+| `db/inventario-inicial.json` | El inventario de la planilla del laboratorio |
+| `scripts/seed.mjs` | Carga inicial |
+| `scripts/exportar-sql.mjs` | Genera `db/labu8.sql` |
+| `src/lib/` | Base de datos, sesiones, PIN, migraciones |
 | `src/lib/queries/` | Consultas: `items`, `prestamos`, `personas`, `horario`, `turnos`, `novedades` |
-| `src/lib/migrar.mjs` | Cambios de forma sobre bases ya creadas (lo usan app y seed) |
-| `src/actions/` | Server actions (todas las escrituras pasan por aquí) |
+| `src/actions/` | Server actions: todas las escrituras pasan por aquí |
 | `src/app/` | Páginas |
-| `data/` | Base de datos y fotos — **no** se versiona |
+| `data/` | Base, fotos y clave de sesiones — **no** se versiona |
 
 ### Decisiones
 
-- **Next.js 16 + server actions**: un solo proceso, sin API separada que mantener.
-- **SQLite con `better-sqlite3`**: un archivo, sin servicio de base de datos que
-  administrar. Las consultas son SQL plano en `src/lib/queries/`, así que migrar
-  a PostgreSQL es reescribir esa carpeta, no la aplicación.
-- **Stock calculado, no almacenado**: `disponible = cantidad_total − prestado`,
-  donde *prestado* se suma desde los préstamos activos. No hay contador que se
-  pueda desincronizar.
+- **Next.js 16 + server actions**: un solo proceso, sin API separada que
+  mantener.
+- **SQLite con `better-sqlite3`**: un archivo, sin servicio que administrar. Las
+  consultas son SQL plano, así que migrar a PostgreSQL es reescribir
+  `src/lib/queries/`, no la aplicación.
+- **Stock calculado, no almacenado**: `disponible = cantidad_total − prestado`.
+  No hay contador que se pueda desincronizar.
 - **Validación dentro de la transacción** al crear un préstamo: si dos ayudantes
   registran la salida del mismo equipo a la vez, el segundo recibe un error en
   lugar de dejar el stock negativo.
+- **Dos grillas horarias separadas**, porque la de ayudantes empieza antes que
+  la de clases y nunca calzarían.
+- **Turno programado contra turno real**: `turnos` es el horario oficial,
+  `sesiones_turno` es lo que pasó. De la diferencia salen los reemplazos.
+- **Nada se borra**: un préstamo mal registrado se *anula* —queda con quién y por
+  qué, y libera el stock—, y un equipo que ya no está se da de baja.
+- **La bitácora es histórica**: el resumen «desde el último turno» solo marca qué
+  parte es nueva; los mensajes no se ocultan al cerrar el turno.
+- **Búsquedas sin tildes**: `multi` encuentra `Multímetro`.
 - **Fotos fuera de `public/`**: viven en `data/uploads` y se sirven por
   `/api/fotos/[nombre]`, para que subir una foto no dependa del build.
-- **Búsquedas sin tildes**: `multi` encuentra `Multímetro`, en la base y en el
-  buscador del formulario.
-- **Dos grillas horarias separadas**: la de ayudantes (T1–T7, desde las 8:00) y
-  la de clases (A–G, desde las 8:10) no calzan, así que no comparten tabla.
-- **Turno programado vs. turno real**: `turnos` es el horario oficial;
-  `sesiones_turno` es lo que pasó. De la diferencia entre ambos salen los
-  reemplazos, y de las horas cubiertas sale el resumen mensual.
-- **«Estar en turno» es tener sesión abierta hoy**, no solo tener la cookie: la
-  cabecera y el registro leen del mismo dato y no pueden contradecirse.
-- **Buscador, no lista desplegable**: con cientos de alumnos un `<select>` es
-  inusable, sobre todo en el celular. Se busca escribiendo nombre o RUT y la
-  consulta sale una vez por pausa de tecleo, no por tecla.
-- **Nada se borra**: un préstamo mal registrado se *anula* —queda con quién lo
-  anuló y por qué, y libera el stock—, y un equipo que ya no está se da de baja.
-  El historial siempre se puede reconstruir.
-- **La bitácora es histórica, no por turno**: el resumen «desde el último
-  turno» solo marca qué parte es nueva; los mensajes no se borran ni se ocultan
-  al cerrar el turno.
-- **Un consumible se entrega, no se presta**: baja del stock en el momento y la
-  línea nace saldada, para que no quede eternamente como pendiente de devolución.
-
-## Puesta en el servidor UCN
-
-La guía completa —qué pedirle a informática, instalación, systemd, nginx,
-respaldo y qué falta decidir en seguridad— está en **[DESPLIEGUE.md](DESPLIEGUE.md)**,
-con los archivos de servicio listos en [`deploy/`](deploy).
-
-En corto: la aplicación no asume nada del entorno salvo Node 20+.
-
-```bash
-git clone https://github.com/FelipeRojoC/LabU8.git labu8 && cd labu8
-npm ci
-npm run build
-LABU8_DATA_DIR=/var/lib/labu8 npm start   # escucha en :3000
-```
-
-`LABU8_DATA_DIR` define dónde viven la base y las fotos: es el único directorio
-que hay que respaldar.
 
 ### Si más adelante se necesita PostgreSQL
 
 Reemplazar `src/lib/db.ts` por un cliente `pg` y traducir `src/lib/queries/`:
 los cambios son los parámetros con nombre (`@x` → `$1`), `AUTOINCREMENT` →
 `GENERATED ... AS IDENTITY`, `datetime('now','localtime')` → `now()` y
-`COLLATE NOCASE` → `lower()`. Las páginas y acciones no cambian.
+`COLLATE NOCASE` → `lower()`. Las páginas y las acciones no cambian.
 
-## Aspecto
+---
 
-La interfaz está tematizada como electrónica: cabecera con textura de
-protoboard, fondo de pistas de circuito que se desplaza muy lento y cursor con
-forma de resistencia. Todo es CSS —`src/app/globals.css`— y solo se animan
-propiedades que resuelve el compositor, así que no pesa. Los controles conservan
-su cursor de siempre para no estorbar el uso, y con
-`prefers-reduced-motion` las animaciones se apagan solas.
+## 7. Comandos
 
-Los colores salen de variables en `:root` (`--brand`, `--brand-soft`,
-`--brand-fuerte`): cambiar la paleta completa es cambiar esas tres líneas.
+| Comando | Qué hace |
+| --- | --- |
+| `npm run dev` | Servidor de desarrollo |
+| `npm run build` | Compila para producción |
+| `npm start` | Levanta la versión compilada |
+| `npm run seed` | Carga lo que falte; no pisa lo que ya está |
+| `npm run sql` | Regenera `db/labu8.sql` |
+| `npm run reset` | Borra **todo** y recarga. Se niega a correr si la base ya tiene actividad real |
+| `npm run lint` | Revisa el código |

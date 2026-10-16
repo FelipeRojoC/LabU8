@@ -2,8 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import {
-  actualizarPersona, buscarPersonas, crearPersona, deudasDe,
+  actualizarPersona, buscarPersonas, crearPersona, deudasDe, obtenerPersona,
 } from "@/lib/queries/personas";
+import { hashPin } from "@/lib/pin.mjs";
 import type { Rol } from "@/lib/types";
 
 export interface Resultado { ok: boolean; error?: string; id?: number }
@@ -13,6 +14,13 @@ export async function guardarPersonaAction(_prev: Resultado, fd: FormData): Prom
     const nombre = String(fd.get("nombre") ?? "").trim();
     if (nombre.length < 2) return { ok: false, error: "Escribe el nombre completo" };
 
+    const idPersona = Number(fd.get("id")) || 0;
+    const anterior = idPersona ? obtenerPersona(idPersona) : undefined;
+    const nuevoPin = String(fd.get("pin") ?? "").trim();
+    if (nuevoPin && !/^\d{4}$/.test(nuevoPin)) {
+      return { ok: false, error: "El PIN tiene que ser de 4 dígitos" };
+    }
+
     const datos = {
       nombre,
       rol: (String(fd.get("rol") || "estudiante") as Rol),
@@ -20,12 +28,14 @@ export async function guardarPersonaAction(_prev: Resultado, fd: FormData): Prom
       email: String(fd.get("email") ?? "").trim() || null,
       telefono: String(fd.get("telefono") ?? "").trim() || null,
       carrera: String(fd.get("carrera") ?? "").trim() || null,
-      pin: String(fd.get("pin") ?? "").trim() || null,
+      // El PIN se guarda hasheado. Dejarlo vacío conserva el que ya tenía:
+      // nunca se puede volver a leer, solo reemplazar.
+      pin: nuevoPin ? hashPin(nuevoPin) : anterior?.pin ?? null,
       es_encargado: fd.get("es_encargado") ? 1 : 0,
       activo: fd.get("activo") ? 1 : 0,
     };
 
-    const id = Number(fd.get("id")) || 0;
+    const id = idPersona;
     if (id) {
       actualizarPersona(id, datos);
       revalidatePath("/encargado/personas");

@@ -13,6 +13,7 @@ import { parseFecha } from "@/lib/db";
 import {
   contarNovedades, desdeElUltimoTurno, incidenciasPendientes, listarNovedades,
 } from "@/lib/queries/novedades";
+import { turnosSinAbrirHoy } from "@/lib/queries/turnos";
 import { ayudanteEnTurno, encargadoEnTurno } from "@/lib/session";
 import { MarcarVista, NotaTurnoForm } from "@/components/Bitacora";
 import { ListaNovedades } from "@/components/ListaNovedades";
@@ -60,6 +61,7 @@ export default async function Panel() {
   const resumen = desdeElUltimoTurno();
   const incidencias = incidenciasPendientes();
   const novedades = listarNovedades(12);
+  const sinAbrir = turnosSinAbrirHoy();
   const totalNovedades = contarNovedades();
 
   // Quien abrió el turno puede no ser el del horario: eso es un reemplazo.
@@ -161,7 +163,10 @@ export default async function Panel() {
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-warn">Nadie ha abierto turno todavía</p>
+            <p className="rounded-md border border-amber-300 bg-amber-50 px-2 py-1.5 text-sm font-medium text-amber-900">
+              Nadie abrió este turno
+              {programados.length > 0 && ` — le toca a ${programados.join(", ")}`}
+            </p>
           )}
         </Tarjeta>
 
@@ -237,6 +242,30 @@ export default async function Panel() {
           </Link>
         </Tarjeta>
       </section>
+
+      {sinAbrir.length > 0 && (
+        <section className="card border-amber-200">
+          <div className="flex items-center gap-2 border-b border-amber-200 bg-amber-50/60 px-4 py-2">
+            <AlertTriangle size={15} className="text-warn" aria-hidden />
+            <h2 className="text-sm font-semibold text-amber-900">
+              Turnos de hoy que nadie abrió
+            </h2>
+          </div>
+          <ul className="divide-y divide-line text-sm">
+            {sinAbrir.map((t) => (
+              <li key={t.bloque} className="flex flex-wrap items-center gap-3 px-4 py-2">
+                <span className="w-32 shrink-0 font-mono text-xs">
+                  {t.bloque} {t.inicio}–{t.termino}
+                </span>
+                <span className="flex-1">Le tocaba a {t.titulares.join(", ")}</span>
+                <Pill tono={t.enCurso ? "peligro" : "aviso"}>
+                  {t.enCurso ? "en curso, sin nadie" : "no se abrió"}
+                </Pill>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* -------------------------------------------------- bitácora */}
       <section className="card">

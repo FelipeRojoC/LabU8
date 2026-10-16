@@ -213,3 +213,43 @@ export function huecosDelMes(anio: number, mes: number, ref: Date = new Date()):
 export function corregirCierre(sesionId: number, cerradoEn: string) {
   db.prepare("UPDATE sesiones_turno SET cerrado_en = ? WHERE id = ?").run(cerradoEn, sesionId);
 }
+
+export interface TurnoSinAbrir {
+  bloque: string;
+  inicio: string;
+  termino: string;
+  titulares: string[];
+  enCurso: boolean;
+}
+
+/**
+ * Bloques de hoy que ya empezaron y que nadie abrió, aunque el horario tenga
+ * a alguien asignado. Es lo que el ayudante que llega necesita saber: si el
+ * turno anterior quedó sin cubrir, el laboratorio estuvo solo.
+ */
+export function turnosSinAbrirHoy(ref: Date = new Date()): TurnoSinAbrir[] {
+  const dia = diaISO(ref);
+  const ahoraMin = ref.getHours() * 60 + ref.getMinutes();
+  const fecha =
+    `${ref.getFullYear()}-${String(ref.getMonth() + 1).padStart(2, "0")}-${String(ref.getDate()).padStart(2, "0")}`;
+
+  // Bloques que alguien efectivamente cubrió hoy.
+  const cubiertos = new Set<string>();
+  for (const s of db.prepare("SELECT * FROM sesiones_turno WHERE fecha = ?").all(fecha) as SesionTurno[]) {
+    for (const b of calcular(s, ref).bloques) cubiertos.add(b.bloque);
+  }
+
+  return listarBloquesTurno()
+    .filter((b) => min(b.inicio) <= ahoraMin && !cubiertos.has(b.codigo))
+    .map((b) => ({
+      bloque: b.codigo,
+      inicio: b.inicio,
+      termino: b.termino,
+      titulares: (db.prepare(
+        `SELECT p.nombre FROM turnos t JOIN personas p ON p.id = t.persona_id
+         WHERE t.dia = ? AND t.bloque = ? ORDER BY p.nombre COLLATE NOCASE`,
+      ).all(dia, b.codigo) as Array<{ nombre: string }>).map((x) => x.nombre),
+      enCurso: ahoraMin < min(b.termino),
+    }))
+    .filter((b) => b.titulares.length > 0);
+}

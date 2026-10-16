@@ -59,11 +59,11 @@ const CONSULTAS: Record<string, { archivo: string; sql: string }> = {
 };
 
 /** Comillas dobles y separador ; porque Excel en español espera punto y coma. */
-function aCSV(filas: Record<string, unknown>[]): string {
-  if (filas.length === 0) return "";
-  const cols = Object.keys(filas[0]);
+function aCSV(cols: string[], filas: Record<string, unknown>[]): string {
   const celda = (v: unknown) =>
     v === null || v === undefined ? "" : `"${String(v).replace(/"/g, '""')}"`;
+  // Aunque no haya filas se escriben los títulos: un archivo de cero bytes
+  // parece un error y no deja ver qué columnas trae el informe.
   return [
     cols.map(celda).join(";"),
     ...filas.map((f) => cols.map((c) => celda(f[c])).join(";")),
@@ -87,14 +87,14 @@ export async function GET(req: Request, ctx: { params: Promise<{ que: string }> 
   const hasta = url.searchParams.get("hasta")
     ?? `${hoy.getFullYear()}-12-31`;
 
+  const stmt = db.prepare(cfg.sql);
+  const cols = stmt.columns().map((c) => c.name);
   const filas = (
-    que === "inventario"
-      ? db.prepare(cfg.sql).all()
-      : db.prepare(cfg.sql).all({ desde, hasta })
+    que === "inventario" ? stmt.all() : stmt.all({ desde, hasta })
   ) as Record<string, unknown>[];
 
   const nombre = `${cfg.archivo}-${new Date().toISOString().slice(0, 10)}.csv`;
-  return new Response("﻿" + aCSV(filas), {
+  return new Response("\uFEFF" + aCSV(cols, filas), {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="${nombre}"`,
