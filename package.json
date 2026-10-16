@@ -1,6 +1,6 @@
 {
   "name": "labu8",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -9,7 +9,8 @@
     "lint": "eslint",
     "seed": "node scripts/seed.mjs",
     "reset": "node scripts/seed.mjs -- --reset",
-    "sql": "node scripts/exportar-sql.mjs"
+    "sql": "node scripts/exportar-sql.mjs",
+    "pin": "node scripts/pin.mjs"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",

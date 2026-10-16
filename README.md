@@ -144,6 +144,22 @@ se marca con una casilla en la ficha de la persona, y se comprueba en el
 servidor: esconder los botones no basta. **No hace falta tener turno abierto**
 para gestionar: basta con haber entrado.
 
+### Si alguien olvida su PIN
+
+El encargado entra a **Encargado → Personas**, edita a esa persona y escribe 4
+dígitos nuevos en «PIN del turno». El anterior deja de valer en el acto y, si
+estaba bloqueada por intentos fallidos, el bloqueo se levanta. Dejar el campo
+vacío conserva el que tenía, para poder corregirle el correo sin tocarle el PIN.
+
+**Si son los encargados los que pierden el suyo**, nadie puede entrar a
+arreglarlo desde la aplicación. Para eso está la salida por consola, que exige
+acceso al servidor:
+
+```bash
+npm run pin                    # lista quién puede entrar
+npm run pin -- "Way-Yeng"      # le genera un PIN nuevo y lo muestra
+```
+
 ### Exportar
 
 El encargado tiene botones de descarga en Inventario, Préstamos y Registro de
@@ -158,7 +174,8 @@ Lo que ya está resuelto:
 
 - **Los PIN no se guardan en claro.** Se almacena un hash scrypt con sal. No
   están en el repositorio: se generan al azar en cada instalación y se muestran
-  una sola vez. Si alguien lo olvida, el encargado le pone uno nuevo.
+  una sola vez. No hay forma de consultarlos después, ni mirando la base: si
+  alguien lo olvida, se le pone uno nuevo.
 - **La cookie de sesión va firmada** (HMAC-SHA256). No se puede inventar: antes
   llevaba el número de la persona en claro y bastaba escribirlo en el navegador
   para entrar como esa persona. La clave se genera sola en `data/` y dura 12
@@ -322,5 +339,6 @@ los cambios son los parámetros con nombre (`@x` → `$1`), `AUTOINCREMENT` →
 | `npm start` | Levanta la versión compilada |
 | `npm run seed` | Carga lo que falte; no pisa lo que ya está |
 | `npm run sql` | Regenera `db/labu8.sql` |
+| `npm run pin` | Lista quién puede entrar; con un nombre, le restablece el PIN |
 | `npm run reset` | Borra **todo** y recarga. Se niega a correr si la base ya tiene actividad real |
 | `npm run lint` | Revisa el código |
