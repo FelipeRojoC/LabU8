@@ -59,6 +59,14 @@ export function crearPersona(d: EntradaPersona): number {
 export function actualizarPersona(id: number, d: Partial<EntradaPersona>) {
   const actual = obtenerPersona(id);
   if (!actual) throw new Error("La persona no existe");
+
+  // Un PIN nuevo levanta el bloqueo por intentos fallidos. Si no, al ayudante
+  // le dicen «pídele al encargado que te lo restablezca», se lo restablecen y
+  // sigue sin poder entrar hasta que pasen los cinco minutos.
+  if (d.pin !== undefined && d.pin !== actual.pin) {
+    db.prepare("DELETE FROM intentos_login WHERE persona_id = ?").run(id);
+  }
+
   db.prepare(
     `UPDATE personas SET nombre=@nombre, rol=@rol, rut=@rut, email=@email,
         telefono=@telefono, carrera=@carrera, pin=@pin, es_encargado=@es_encargado,
