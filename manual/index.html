@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Manual del ayudante — Laboratorio de Electrotecnia U8</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<div class="hoja">
+
+<header class="portada">
+  <div class="chapa">U8</div>
+  <h1>Manual del ayudante</h1>
+  <p>Laboratorio de Electrotecnia U8 · Universidad Católica del Norte</p>
+</header>
+
+<main>
+
+<p class="entradilla">
+  Todo lo que necesitas saber para usar el sistema durante tu turno. Lo más
+  importante son dos cosas: <b>abrir turno al llegar</b> y <b>registrar todo lo
+  que sale y vuelve</b>. El resto se explica solo.
+</p>
+
+<nav class="indice">
+  <ol>
+    <li><a href="#rutina">La rutina de un turno</a></li>
+    <li><a href="#entrar">Entrar y abrir turno</a></li>
+    <li><a href="#panel">El panel: qué mirar al llegar</a></li>
+    <li><a href="#prestar">Prestar un equipo</a></li>
+    <li><a href="#bloqueo">Cuando alguien debe equipos</a></li>
+    <li><a href="#devolver">Recibir una devolución</a></li>
+    <li><a href="#roto">Si algo vuelve roto o no vuelve</a></li>
+    <li><a href="#buscar">Buscar en el inventario</a></li>
+    <li><a href="#recado">Dejar un recado al turno siguiente</a></li>
+    <li><a href="#horario">El horario</a></li>
+    <li><a href="#cerrar">Cerrar turno y salir</a></li>
+    <li><a href="#encargado">Solo para el encargado</a></li>
+    <li><a href="#problemas">Si algo sale mal</a></li>
+  </ol>
+</nav>
+
+<!-- ================================================================ -->
+<h2 id="rutina">1 · La rutina de un turno</h2>
+<p>Esto es todo el ciclo, de principio a fin:</p>
+
+<div class="diagrama">
+<svg viewBox="0 0 900 250" xmlns="http://www.w3.org/2000/svg" role="img"
+     aria-label="Flujo de un turno: llegar, entrar, abrir turno, atender, cerrar turno y salir">
+  <defs>
+    <marker id="f" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0 1 L8 4.5 L0 8 z" fill="#5b21b6"/>
+    </marker>
+    <style>
+      .c{fill:#fff;stroke:#5b21b6;stroke-width:2}
+      .cv{fill:#dcfce7;stroke:#15803d;stroke-width:2}
+      .t{font:600 14px sans-serif;fill:#1a1033;text-anchor:middle}
+      .s{font:11px sans-serif;fill:#6b6588;text-anchor:middle}
+      .l{stroke:#5b21b6;stroke-width:2;marker-end:url(#f)}
+    </style>
+  </defs>
+
+  <rect class="cv" x="10"  y="46" width="130" height="58" rx="10"/>
+  <text class="t" x="75"  y="70">Llegas</text>
+  <text class="s" x="75"  y="88">al laboratorio</text>
+
+  <rect class="c"  x="178" y="46" width="130" height="58" rx="10"/>
+  <text class="t" x="243" y="70">Entrar</text>
+  <text class="s" x="243" y="88">tu nombre y PIN</text>
+
+  <rect class="c"  x="346" y="46" width="150" height="58" rx="10"/>
+  <text class="t" x="421" y="70">Abrir turno</text>
+  <text class="s" x="421" y="88">queda la hora</text>
+
+  <rect class="c"  x="534" y="20" width="160" height="52" rx="10"/>
+  <text class="t" x="614" y="42">Prestar</text>
+  <text class="s" x="614" y="58">equipo que sale</text>
+
+  <rect class="c"  x="534" y="82" width="160" height="52" rx="10"/>
+  <text class="t" x="614" y="104">Devolver</text>
+  <text class="s" x="614" y="120">equipo que vuelve</text>
+
+  <rect class="c"  x="534" y="144" width="160" height="52" rx="10"/>
+  <text class="t" x="614" y="166">Dejar recado</text>
+  <text class="s" x="614" y="182">si pasó algo</text>
+
+  <rect class="cv" x="732" y="46" width="150" height="58" rx="10"/>
+  <text class="t" x="807" y="70">Cerrar turno</text>
+  <text class="s" x="807" y="88">y salir</text>
+
+  <line class="l" x1="142" y1="75" x2="174" y2="75"/>
+  <line class="l" x1="310" y1="75" x2="342" y2="75"/>
+  <path class="l" d="M498 75 L516 75 L516 46 L530 46"/>
+  <line class="l" x1="498" y1="75" x2="530" y2="108" style="stroke-dasharray:0"/>
+  <path class="l" d="M498 75 L516 75 L516 170 L530 170"/>
+  <path class="l" d="M698 46 L716 46 L716 75 L728 75"/>
+  <line class="l" x1="698" y1="108" x2="728" y2="80"/>
+  <path class="l" d="M698 170 L716 170 L716 75 L728 75"/>
+
+  <text class="s" x="614" y="222">durante el turno, las veces que haga falta</text>
+</svg>
+</div>
+
+<div class="caja ojo">
+  <b>Las dos reglas que importan</b>
+  <p>
+    <b>1.</b> Abre tu turno apenas llegues. Es lo que deja registradas tus horas
+    y lo que permite ver quién hizo reemplazo si tuviste que cubrir a otro.
+  </p>
+  <p>
+    <b>2.</b> Registra <i>todo</i> lo que sale y todo lo que vuelve, aunque sea
+    un cable por diez minutos. Si no queda registrado, para el sistema ese
+    equipo sigue en el laboratorio, y el que paga el pato es el turno siguiente.
+  </p>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="entrar">2 · Entrar y abrir turno</h2>
+<p>
+  El botón <b>Entrar</b> está arriba a la derecha, en la barra morada. Al
+  apretarlo se abre esta ventanita:
+</p>
+
+<div class="shot">
+  <img src="img/entrar.jpg" alt="Ventana para entrar al sistema">
+  <span class="pin" style="left:94.6%;top:3.8%">1</span>
+  <span class="pin" style="left:85%;top:15.5%">2</span>
+  <span class="pin" style="left:85%;top:21.8%">3</span>
+  <span class="pin" style="left:85%;top:28%">4</span>
+  <span class="pin" style="left:85%;top:33.4%">5</span>
+</div>
+<ol class="pasos">
+  <li>Aprieta <b>Entrar</b>.</li>
+  <li>Elige tu nombre en la lista.</li>
+  <li>Escribe tu <b>PIN de 4 dígitos</b>.</li>
+  <li><b>Entrar y abrir turno</b> — esto es lo que usas tú al llegar a trabajar.
+      Queda registrada la hora y cuenta en tus horas del mes.</li>
+  <li><b>Solo entrar, sin registrar turno</b> — para mirar algo o corregir un dato
+      sin que cuente como turno trabajado. Normalmente no lo vas a usar.</li>
+</ol>
+
+<div class="caja bien">
+  <b>¿Se te olvidó abrir el turno al entrar?</b>
+  <p>
+    No pasa nada: arriba a la derecha te va a aparecer <i>«sin turno abierto»</i>
+    y un botón <b>Abrir turno</b>. Apriétalo y queda igual.
+  </p>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="panel">3 · El panel: qué mirar al llegar</h2>
+<p>
+  Es la primera pantalla. Está pensada para que en diez segundos sepas con qué
+  te estás encontrando.
+</p>
+
+<div class="shot">
+  <img src="img/panel.jpg" alt="Panel del laboratorio">
+  <span class="pin" style="left:10%;top:23%">1</span>
+  <span class="pin" style="left:8%;top:41%">2</span>
+  <span class="pin" style="left:40%;top:41%">3</span>
+  <span class="pin" style="left:73%;top:41%">4</span>
+  <span class="pin" style="left:11%;top:80%">5</span>
+</div>
+<ol class="pasos">
+  <li><b>Los números de arriba.</b> Cuántos préstamos hay afuera, cuántos están
+      atrasados, cuántas unidades tiene el laboratorio y cuántos vencen hoy. Si
+      «Atrasados» no está en cero, hay equipos que debían haber vuelto.</li>
+  <li><b>Turno de ayudantía.</b> Qué bloque corre ahora, a quién le toca según el
+      horario y quién abrió el turno de verdad. Si dice <i>reemplazo</i> es
+      porque quien abrió no es el del horario.</li>
+  <li><b>Clases en la sala.</b> Qué ramo está ocupando el laboratorio en este
+      momento y cuál viene después.</li>
+  <li><b>Próximos turnos.</b> Quién viene después de ti.</li>
+  <li><b>Bitácora.</b> Los recados que dejaron los turnos anteriores. Léelos
+      antes de empezar.</li>
+</ol>
+
+<div class="caja ojo">
+  <b>Turnos que nadie abrió</b>
+  <p>
+    Si algún bloque de hoy pasó sin que nadie lo abriera, aparece un recuadro
+    amarillo diciendo cuál fue y a quién le tocaba. No es para acusar a nadie:
+    es para que sepas que el laboratorio estuvo sin ayudante.
+  </p>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="prestar">4 · Prestar un equipo</h2>
+<p>
+  Desde <b>Préstamos → Registrar salida</b>, o con el botón del panel. La
+  pantalla está numerada: solo sigue el 1, 2, 3.
+</p>
+
+<div class="shot">
+  <img src="img/prestamo.jpg" alt="Formulario para registrar una salida de equipos">
+  <span class="pin" style="left:6%;top:29%">1</span>
+  <span class="pin" style="left:65%;top:29%">2</span>
+  <span class="pin" style="left:65%;top:51%">3</span>
+  <span class="pin" style="left:79%;top:96%">4</span>
+</div>
+<ol class="pasos">
+  <li><b>¿Qué se lleva?</b> Escribe el nombre del equipo y aprieta el <b>+</b>.
+      Puedes agregar varios. Con los botones <b>−</b> y <b>+</b> ajustas cuántas
+      unidades lleva.</li>
+  <li><b>¿Quién se lo lleva?</b> Escribe el nombre o el RUT. Si no aparece, el
+      botón te ofrece registrarlo en el momento.</li>
+  <li><b>¿Cuándo lo devuelve?</b> Siempre hay que ponerla, aunque sea para la
+      misma tarde. Sin fecha no se puede hacer seguimiento.</li>
+  <li>Aprieta <b>Registrar salida</b>. Listo.</li>
+</ol>
+
+<h3>Si la persona no está registrada</h3>
+<p>
+  Escribe su nombre en el buscador y aprieta el botón que aparece debajo
+  (<i>«Registrar a …»</i>). Te va a pedir <b>nombre, RUT y correo</b>, y los
+  tres son obligatorios.
+</p>
+<div class="caja ojo">
+  <p>
+    No es burocracia: si el equipo no vuelve, eso es lo único que tienes para
+    ubicar a la persona.
+  </p>
+</div>
+
+<div class="shot">
+  <img src="img/buscar-persona.jpg" alt="Buscador de personas por nombre o RUT">
+  <span class="pin" style="left:79%;top:35%">1</span>
+  <span class="pin" style="left:94%;top:42%">2</span>
+  <span class="pin" style="left:79%;top:49%">3</span>
+</div>
+<ol class="pasos">
+  <li>Escribe dos letras del nombre, o el RUT.</li>
+  <li>Si la persona <b>debe equipos</b>, sale marcado en rojo altiro.</li>
+  <li>Si no está en la lista, este botón la registra.</li>
+</ol>
+
+<!-- ================================================================ -->
+<h2 id="bloqueo">5 · Cuando alguien debe equipos</h2>
+<p>
+  Si la persona tiene préstamos vencidos sin devolver, el sistema
+  <b>no te deja</b> registrarle una salida nueva:
+</p>
+
+<div class="shot">
+  <img src="img/bloqueado.jpg" alt="Aviso de préstamo bloqueado por deuda">
+  <span class="marco" style="left:61.5%;top:24%;width:36%;height:14%"></span>
+  <span class="marco" style="left:61.5%;top:83%;width:36%;height:12%"></span>
+</div>
+
+<p>
+  El botón de registrar desaparece y en su lugar queda el aviso. <b>No es un
+  error tuyo ni hay forma de saltárselo desde la aplicación.</b>
+</p>
+<div class="caja alto">
+  <b>Qué le dices a la persona</b>
+  <p>
+    Que primero devuelva lo que tiene pendiente y después puede llevarse lo que
+    necesite. Si el caso es urgente —un certamen, una entrega— que hable con el
+    encargado: solo él puede desbloquear la situación, anulando o cerrando el
+    préstamo viejo.
+  </p>
+  <p>
+    Tú no tienes que negociar nada ni sentirte mal. El sistema decidió, no tú.
+  </p>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="devolver">6 · Recibir una devolución</h2>
+<p>
+  Lo normal —vuelve todo y en buen estado— es <b>un solo clic</b> desde la lista
+  de préstamos. No necesitas entrar a ninguna parte.
+</p>
+
+<div class="shot">
+  <img src="img/devolver.jpg" alt="Lista de préstamos activos con el botón Devolver todo">
+  <span class="pin" style="left:91%;top:38%">1</span>
+  <span class="pin" style="left:80%;top:37%">2</span>
+  <span class="pin" style="left:43%;top:38%">3</span>
+</div>
+<ol class="pasos">
+  <li><b>Devolver todo</b> — el botón verde. Marca el préstamo completo como
+      devuelto, con tu nombre y la hora.</li>
+  <li>La etiqueta te dice si está <b>al día</b> o <b>atrasado</b>.</li>
+  <li>Aprieta sobre el nombre si necesitas ver el detalle: qué se llevó
+      exactamente, cuándo, y quién se lo entregó.</li>
+</ol>
+
+<h3>Si vuelve solo una parte</h3>
+<p>
+  Entra al préstamo apretando el nombre. Abajo hay una lista con cada equipo y
+  una casilla de cuántas unidades vuelven. Pon las que efectivamente te
+  entregaron y confirma: el préstamo queda abierto con el resto pendiente.
+</p>
+
+<!-- ================================================================ -->
+<h2 id="roto">7 · Si algo vuelve roto o no vuelve</h2>
+<p>
+  En la pantalla de devolución, al lado de cada equipo hay un menú de
+  <b>Condición</b> con tres opciones:
+</p>
+
+<table>
+  <tr><th>Opción</th><th>Cuándo usarla</th><th>Qué hace el sistema</th></tr>
+  <tr>
+    <td><b>Buen estado</b></td>
+    <td>Lo normal.</td>
+    <td>El equipo vuelve al stock, disponible para el siguiente.</td>
+  </tr>
+  <tr>
+    <td><b>Dañado</b></td>
+    <td>Volvió pero no está para prestarlo: una punta quebrada, no enciende,
+        le falta una pieza.</td>
+    <td>Lo deja <b>en mantenimiento</b>, nadie puede prestarlo hasta que lo
+        revisen, y le avisa al encargado.</td>
+  </tr>
+  <tr>
+    <td><b>Perdido / no vuelve</b></td>
+    <td>La persona dice que lo perdió, o directamente no lo trajo.</td>
+    <td>Lo <b>descuenta del inventario</b> y le avisa al encargado.</td>
+  </tr>
+</table>
+
+<div class="caja bien">
+  <b>Escribe qué pasó</b>
+  <p>
+    Abajo hay un campo de nota. Pon ahí lo que te dijeron: <i>«se le cayó al
+    suelo»</i>, <i>«dice que lo devolvió el martes»</i>. Esa frase es lo que va
+    a leer el encargado cuando revise, y evita discusiones después.
+  </p>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="buscar">8 · Buscar en el inventario</h2>
+<p>
+  El buscador entiende más que el nombre: puedes escribir la <b>categoría</b>
+  («resistencias»), la <b>ubicación</b> («sala», «estante 2») o el <b>estado</b>
+  («mantenimiento»).
+</p>
+
+<div class="shot">
+  <img src="img/inventario.jpg" alt="Inventario con el buscador desplegado">
+  <span class="pin" style="left:14%;top:32%">1</span>
+  <span class="pin" style="left:14%;top:40%">2</span>
+  <span class="pin" style="left:36%;top:32%">3</span>
+</div>
+<ol class="pasos">
+  <li>Escribe lo que buscas, aunque sean dos letras.</li>
+  <li>Aparece una lista mientras escribes. Si eliges una <b>categoría</b> o una
+      <b>ubicación</b>, filtra todo el inventario por eso.</li>
+  <li>Los filtros de arriba se aplican solos al elegirlos, no hay que apretar
+      ningún botón.</li>
+</ol>
+<p>
+  No hace falta poner tildes: <code>multi</code> encuentra «Multímetro».
+  Apretando cualquier equipo ves su ficha: dónde está guardado, cuántos quedan
+  y quién lo tiene en este momento.
+</p>
+
+<div class="caja ojo">
+  <b>El inventario solo lo modifica el encargado</b>
+  <p>
+    Tú puedes mirar todo y prestar, pero agregar equipos, editar fichas, subir
+    fotos o cambiar cantidades es del encargado. Si falta algo o un dato está
+    mal, avísale.
+  </p>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="recado">9 · Dejar un recado al turno siguiente</h2>
+<p>
+  La <b>Bitácora</b> es el cuaderno del laboratorio. Está en el panel y también
+  en su propia pestaña. Escribe ahí cualquier cosa que el que viene después
+  necesite saber:
+</p>
+<ul>
+  <li>«La fuente 3 quedó con el fusible quemado, no la presten.»</li>
+  <li>«Pasó el profe Salas a buscar los transformadores, los trae el viernes.»</li>
+  <li>«Quedó un multímetro sobre el mesón, no sé de quién es.»</li>
+</ul>
+<p>
+  Los mensajes <b>no se borran</b> al cerrar el turno: quedan guardados y los ve
+  cualquiera que entre. Una línea separa lo nuevo de lo viejo.
+</p>
+<p>
+  Ahí mismo aparecen solos los avisos del sistema cuando algo vuelve dañado o
+  se pierde, marcados como <b>incidencia</b>.
+</p>
+
+<!-- ================================================================ -->
+<h2 id="horario">10 · El horario</h2>
+<p>
+  Son dos tablas, porque los ayudantes entran a las 8:00 y las clases empiezan
+  a las 8:10. Los bloques se llaman igual (A, B, C…) pero tienen horarios
+  distintos; al lado de cada letra está la hora, que es lo que los distingue.
+</p>
+
+<div class="shot">
+  <img src="img/horario.jpg" alt="Horario de turnos de ayudantes y de clases">
+  <span class="marco" style="left:81.3%;top:35.1%;width:17.3%;height:7.4%"></span>
+  <span class="pin" style="left:3%;top:27%">1</span>
+  <span class="pin" style="left:3%;top:88%">2</span>
+</div>
+<ol class="pasos">
+  <li><b>Turnos de ayudantes</b>: A, B, C, ALMUERZO, D, E, F. El recuadro verde
+      es el bloque que corre ahora.</li>
+  <li><b>Clases en el laboratorio</b>: bloques A a G, con el ramo y el profesor.
+      También marca en verde el que está en curso.</li>
+</ol>
+
+<!-- ================================================================ -->
+<h2 id="cerrar">11 · Cerrar turno y salir</h2>
+<p>
+  Antes de irte, dos cosas:
+</p>
+<ol class="pasos">
+  <li>Revisa que todo lo que salió durante tu turno esté registrado, y que lo
+      que volvió esté marcado como devuelto.</li>
+  <li>Si pasó algo que el siguiente deba saber, déjalo en la bitácora.</li>
+  <li>Aprieta <b>Cerrar turno</b> arriba a la derecha. Queda guardada la hora de
+      término.</li>
+  <li>Si además te vas del computador, aprieta el botón de <b>salir</b> (el
+      icono de la flecha) para que nadie use tu cuenta.</li>
+</ol>
+
+<div class="caja alto">
+  <b>Si se te olvida cerrar el turno</b>
+  <p>
+    Tus horas de ese día cuentan solo hasta el final del bloque en que lo
+    abriste, y queda marcado como <i>«sin cerrar»</i>. El encargado puede
+    corregir la hora después, pero es más fácil acordarse.
+  </p>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="encargado">12 · Solo para el encargado</h2>
+<p>
+  Si tu cuenta es de encargado, en el menú aparece una pestaña más. Ahí está
+  todo lo de gestión, separado de la vista del día a día.
+</p>
+
+<div class="shot">
+  <img src="img/encargado.jpg" alt="Área del encargado">
+  <span class="pin" style="left:74%;top:10%">1</span>
+  <span class="pin" style="left:90%;top:10%">2</span>
+  <span class="pin" style="left:17%;top:34%">3</span>
+  <span class="pin" style="left:82%;top:34%">4</span>
+  <span class="pin" style="left:7%;top:59%">5</span>
+  <span class="pin" style="left:10%;top:73%">6</span>
+</div>
+<ol class="pasos">
+  <li>Fíjate: dice <b>«sin turno abierto»</b>. El encargado puede entrar a
+      corregir cosas sin que le cuente como turno trabajado.</li>
+  <li>Si además viene a trabajar, abre el turno con este botón.</li>
+  <li><b>Inventario</b>: agregar, editar, subir fotos, ajustar stock, eliminar.
+      Aquí está también la <b>carga rápida</b> para cargar un estante entero.</li>
+  <li><b>Personas</b>: PIN y permisos.</li>
+  <li><b>Lo que falta completar</b>: atajos a los equipos sin foto o sin
+      ubicación, para ir cerrando el inventario de a poco.</li>
+  <li><b>Exportar a Excel</b>: el inventario, los préstamos del año y las horas
+      del mes.</li>
+</ol>
+
+<h3>Cambiar el PIN de alguien que lo olvidó</h3>
+
+<div class="shot">
+  <img src="img/personas.jpg" alt="Pantalla de personas con la ficha abierta">
+  <span class="pin" style="left:61%;top:76%">1</span>
+  <span class="pin" style="left:83%;top:73%">2</span>
+  <span class="pin" style="left:69.5%;top:85.5%">3</span>
+  <span class="pin" style="left:75%;top:92.5%">4</span>
+</div>
+<ol class="pasos">
+  <li>Busca a la persona y aprieta <b>Editar</b>.</li>
+  <li>Escribe <b>4 dígitos nuevos</b> en «PIN del turno» y dáselos. El anterior
+      deja de funcionar al instante, y si estaba bloqueada por errar el PIN,
+      se desbloquea.</li>
+  <li>La casilla <b>Encargado</b> da acceso a esta sección. Úsala con cuidado.</li>
+  <li><b>Guardar cambios</b>.</li>
+</ol>
+
+<div class="caja alto">
+  <b>Los PIN no se pueden consultar</b>
+  <p>
+    Se guardan cifrados: ni tú ni nadie puede ver el PIN de otra persona, ni
+    mirando la base de datos. Solo se pueden reemplazar. Si dejas el campo en
+    blanco, conserva el que tenía.
+  </p>
+  <p>
+    Si los dos encargados pierden el suyo, hay una salida desde la consola del
+    servidor: <code>npm run pin -- "Nombre"</code>.
+  </p>
+</div>
+
+<h3>Anular un préstamo mal registrado</h3>
+<p>
+  Entra al préstamo y aprieta <b>Anular préstamo</b>. Se libera el stock y queda
+  constancia de quién lo anuló y por qué. No se borra nada. Es lo que hay que
+  hacer cuando un ayudante registró a la persona equivocada o una cantidad mal.
+</p>
+
+<!-- ================================================================ -->
+<h2 id="problemas">13 · Si algo sale mal</h2>
+
+<table>
+  <tr><th>Qué te pasa</th><th>Qué hacer</th></tr>
+  <tr>
+    <td>Me equivoqué al registrar un préstamo</td>
+    <td>Avísale al encargado: solo él puede anularlo. Mientras tanto no lo
+        registres de nuevo, quedarían dos.</td>
+  </tr>
+  <tr>
+    <td>Dice «PIN incorrecto» y estoy seguro de que es el mío</td>
+    <td>Revisa que arriba esté tu nombre y no el de otro. Después de 5 intentos
+        la cuenta se bloquea 5 minutos.</td>
+  </tr>
+  <tr>
+    <td>Dice «Demasiados intentos fallidos»</td>
+    <td>Espera los minutos que indica, o pídele al encargado que te ponga un
+        PIN nuevo: eso levanta el bloqueo de inmediato.</td>
+  </tr>
+  <tr>
+    <td>No encuentro un equipo en el buscador</td>
+    <td>Prueba con menos letras, o con la categoría. Si de verdad no está en el
+        inventario, avísale al encargado para que lo agregue.</td>
+  </tr>
+  <tr>
+    <td>El equipo está en el laboratorio pero el sistema dice que está prestado</td>
+    <td>Alguien no registró la devolución. Búscalo en Préstamos y devuélvelo tú,
+        y déjalo anotado en la bitácora.</td>
+  </tr>
+  <tr>
+    <td>La página no carga</td>
+    <td>Avísale al encargado. Mientras tanto anota en un papel lo que salga y
+        lo que vuelva, y regístralo apenas se arregle.</td>
+  </tr>
+</table>
+
+</main>
+
+<footer>
+  Manual del ayudante · Laboratorio de Electrotecnia U8 · Universidad Católica
+  del Norte.<br>
+  Las capturas corresponden a datos de ejemplo. Ante cualquier duda, pregúntale
+  al encargado del laboratorio.
+</footer>
+
+</div>
+</body>
+</html>

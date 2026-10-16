@@ -58,7 +58,19 @@ No trae PIN, préstamos, turnos realizados ni bitácora. Se regenera con
 
 ---
 
-## 2. Qué hace la página
+## 2. Manual del ayudante
+
+En [`manual/`](manual) hay un manual ilustrado con capturas reales y los pasos
+señalados, pensado para que un ayudante nuevo aprenda solo. Se abre con doble
+clic en `manual/index.html`, o se sirve en la red del laboratorio:
+
+```bash
+cd manual && python3 -m http.server 3003 --bind 0.0.0.0
+```
+
+También se imprime bien desde el navegador.
+
+## 3. Qué hace la página
 
 | Pantalla | Para qué |
 | --- | --- |
@@ -126,7 +138,7 @@ de a poco sin perder el hilo.
 
 ---
 
-## 3. Quién puede hacer qué
+## 4. Quién puede hacer qué
 
 | | Ayudante | Encargado |
 | --- | :---: | :---: |
@@ -168,7 +180,7 @@ sin romper las tildes.
 
 ---
 
-## 4. Seguridad
+## 5. Seguridad
 
 Lo que ya está resuelto:
 
@@ -198,7 +210,7 @@ Lo que **falta decidir** antes de abrirlo a la red:
 
 ---
 
-## 5. Puesta en el servidor UCN
+## 6. Puesta en el servidor UCN
 
 ### Qué pedirle a informática
 
@@ -279,7 +291,7 @@ Los cambios de forma de la base se aplican solos al arrancar
 
 ---
 
-## 6. Cómo está hecho
+## 7. Cómo está hecho
 
 | Ruta | Qué hay |
 | --- | --- |
@@ -330,7 +342,7 @@ los cambios son los parámetros con nombre (`@x` → `$1`), `AUTOINCREMENT` →
 
 ---
 
-## 7. Comandos
+## 8. Comandos
 
 | Comando | Qué hace |
 | --- | --- |
