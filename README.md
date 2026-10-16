@@ -208,7 +208,7 @@ Lo que **falta decidir** antes de abrirlo a la red:
 | **Node.js** | 20 LTS o superior | Es el único runtime que se necesita |
 | **Usuario** | Una cuenta de sistema sin login, por ejemplo `labu8` | Para que el servicio no corra como root |
 | **Directorio** | `/var/lib/labu8`, del usuario `labu8`, **con respaldo diario** | Ahí viven la base, las fotos y la clave de sesiones. Es lo único irrecuperable |
-| **DNS** | Un registro interno, por ejemplo `labu8.ucn.cl` | Para no andar con direcciones IP |
+| **DNS** | Un registro interno, por ejemplo `labu8.disc.ucn.cl` | Para no andar con direcciones IP |
 | **TLS** | El certificado institucional para ese nombre | Para servir por HTTPS |
 | **Proxy** | nginx hacia `127.0.0.1:3000` | El proceso Node no debe quedar expuesto directo |
 | **Red** | Acceso solo desde la red de la universidad o VPN | Ver la sección de seguridad |
