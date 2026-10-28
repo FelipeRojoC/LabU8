@@ -10,7 +10,6 @@ export interface Persona {
   email: string | null;
   telefono: string | null;
   carrera: string | null;
-  pin: string | null;
   /** Puede anular préstamos y editar el horario y los turnos. */
   es_encargado: number;
   activo: number;

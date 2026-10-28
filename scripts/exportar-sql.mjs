@@ -21,7 +21,8 @@ const TABLAS = [
 ];
 
 /** Las columnas que no deben salir del laboratorio. */
-const OCULTAR = { personas: ["pin"] };
+// El correo es la credencial de acceso y además un dato personal.
+const OCULTAR = { personas: ["email", "rut", "telefono"] };
 
 const valor = (v) => {
   if (v === null || v === undefined) return "NULL";
@@ -40,8 +41,9 @@ const partes = [
 --  clases, los turnos de ayudantes, las categorías, las ubicaciones y el
 --  inventario.
 --
---  NO trae PIN, préstamos, turnos realizados ni la bitácora. Los PIN se
---  generan en cada instalación y se muestran una sola vez.
+--  NO trae correos, RUT, teléfonos, préstamos, turnos realizados ni la
+--  bitácora: son datos personales o de operación. Los correos de acceso se
+--  registran en cada instalación.
 --
 --  Para cargarlo:   sqlite3 labu8.db < labu8.sql
 -- =====================================================================

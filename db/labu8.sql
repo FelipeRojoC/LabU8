@@ -1,13 +1,14 @@
 -- =====================================================================
 --  Laboratorio de Electrotecnia U8 — base de datos
---  Generado el 2026-10-16 con: npm run sql
+--  Generado el 2026-10-28 con: npm run sql
 --
 --  Trae el esquema completo y los datos de referencia: el horario de
 --  clases, los turnos de ayudantes, las categorías, las ubicaciones y el
 --  inventario.
 --
---  NO trae PIN, préstamos, turnos realizados ni la bitácora. Los PIN se
---  generan en cada instalación y se muestran una sola vez.
+--  NO trae correos, RUT, teléfonos, préstamos, turnos realizados ni la
+--  bitácora: son datos personales o de operación. Los correos de acceso se
+--  registran en cada instalación.
 --
 --  Para cargarlo:   sqlite3 labu8.db < labu8.sql
 -- =====================================================================
@@ -28,10 +29,9 @@ CREATE TABLE IF NOT EXISTS personas (
   rol          TEXT    NOT NULL DEFAULT 'estudiante'
                        CHECK (rol IN ('ayudante','estudiante','docente','tecnico','externo')),
   rut          TEXT,
-  email        TEXT,
+  email        TEXT,            -- correo UCN: es la identidad para entrar
   telefono     TEXT,
   carrera      TEXT,
-  pin          TEXT,            -- solo ayudantes/tecnicos: login simple del turno
   es_encargado INTEGER NOT NULL DEFAULT 0,  -- puede anular prestamos y editar el horario
   activo       INTEGER NOT NULL DEFAULT 1,
   creado_en    TEXT    NOT NULL DEFAULT (datetime('now','localtime'))
@@ -186,16 +186,6 @@ CREATE TABLE IF NOT EXISTS novedades (
 CREATE INDEX IF NOT EXISTS idx_novedades_fecha ON novedades(creado_en DESC);
 CREATE INDEX IF NOT EXISTS idx_novedades_tipo  ON novedades(tipo, visto_en);
 
--- ------------------------------------------------------ intentos de PIN
--- Freno a la fuerza bruta. Va en la base y no en memoria porque el servidor
--- atiende con varios procesos: un contador en memoria se duplica y nunca
--- llega al tope.
-CREATE TABLE IF NOT EXISTS intentos_login (
-  persona_id INTEGER PRIMARY KEY REFERENCES personas(id) ON DELETE CASCADE,
-  fallos     INTEGER NOT NULL DEFAULT 0,
-  hasta      TEXT                        -- bloqueado hasta esta hora local
-);
-
 -- --------------------------------------------------------------- bitacora
 CREATE TABLE IF NOT EXISTS bitacora (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -249,20 +239,20 @@ INSERT INTO ubicaciones (id, nombre, descripcion) VALUES (3, 'Gabinete con llave
 INSERT INTO ubicaciones (id, nombre, descripcion) VALUES (4, 'Sala, estante 2, repisa 1', NULL);
 
 -- 14 fila(s) en personas
-INSERT INTO personas (id, nombre, rol, rut, email, telefono, carrera, activo, creado_en, es_encargado) VALUES (1, 'Pablo Salas', 'docente', NULL, NULL, NULL, NULL, 1, '2026-10-15 17:39:39', 0);
-INSERT INTO personas (id, nombre, rol, rut, email, telefono, carrera, activo, creado_en, es_encargado) VALUES (2, 'Julio Cerna', 'docente', NULL, NULL, NULL, NULL, 1, '2026-10-15 17:39:39', 0);
-INSERT INTO personas (id, nombre, rol, rut, email, telefono, carrera, activo, creado_en, es_encargado) VALUES (3, 'Maikol Leiva', 'docente', NULL, NULL, NULL, NULL, 1, '2026-10-15 17:39:39', 0);
-INSERT INTO personas (id, nombre, rol, rut, email, telefono, carrera, activo, creado_en, es_encargado) VALUES (4, 'Robert Guamán', 'docente', NULL, NULL, NULL, NULL, 1, '2026-10-15 17:39:39', 0);
-INSERT INTO personas (id, nombre, rol, rut, email, telefono, carrera, activo, creado_en, es_encargado) VALUES (5, 'Christian David Camacho Morales', 'docente', NULL, NULL, NULL, NULL, 1, '2026-10-15 17:39:39', 0);
-INSERT INTO personas (id, nombre, rol, rut, email, telefono, carrera, activo, creado_en, es_encargado) VALUES (6, 'Oswaldo Aníbal Menéndez Granizo', 'docente', NULL, NULL, NULL, NULL, 1, '2026-10-15 17:39:39', 0);
-INSERT INTO personas (id, nombre, rol, rut, email, telefono, carrera, activo, creado_en, es_encargado) VALUES (8, 'Felipe Rojo', 'ayudante', NULL, 'felipe.rojo@alumnos.ucn.cl', NULL, 'Encargado del laboratorio', 1, '2026-10-15 17:39:39', 1);
-INSERT INTO personas (id, nombre, rol, rut, email, telefono, carrera, activo, creado_en, es_encargado) VALUES (9, 'Vicente', 'ayudante', NULL, NULL, NULL, 'Ayudantía Electrotecnia', 1, '2026-10-15 17:39:39', 0);
-INSERT INTO personas (id, nombre, rol, rut, email, telefono, carrera, activo, creado_en, es_encargado) VALUES (10, 'Guillermo', 'ayudante', NULL, NULL, NULL, 'Ayudantía Electrotecnia', 1, '2026-10-15 17:39:39', 0);
-INSERT INTO personas (id, nombre, rol, rut, email, telefono, carrera, activo, creado_en, es_encargado) VALUES (11, 'Nicole', 'ayudante', NULL, NULL, NULL, 'Ayudantía Electrotecnia', 1, '2026-10-15 17:39:39', 0);
-INSERT INTO personas (id, nombre, rol, rut, email, telefono, carrera, activo, creado_en, es_encargado) VALUES (12, 'Dayris', 'ayudante', NULL, NULL, NULL, 'Ayudantía Electrotecnia', 1, '2026-10-15 17:39:39', 0);
-INSERT INTO personas (id, nombre, rol, rut, email, telefono, carrera, activo, creado_en, es_encargado) VALUES (13, 'Adriana', 'ayudante', NULL, NULL, NULL, 'Ayudantía Electrotecnia', 1, '2026-10-15 17:39:39', 0);
-INSERT INTO personas (id, nombre, rol, rut, email, telefono, carrera, activo, creado_en, es_encargado) VALUES (14, 'Adrian', 'ayudante', NULL, NULL, NULL, 'Ayudantía Electrotecnia', 1, '2026-10-15 17:39:39', 0);
-INSERT INTO personas (id, nombre, rol, rut, email, telefono, carrera, activo, creado_en, es_encargado) VALUES (15, 'Way-Yeng', 'ayudante', NULL, NULL, NULL, 'Encargado del laboratorio', 1, '2026-10-15 21:03:58', 1);
+INSERT INTO personas (id, nombre, rol, carrera, pin, activo, creado_en, es_encargado) VALUES (1, 'Pablo Salas', 'docente', NULL, NULL, 1, '2026-10-15 17:39:39', 0);
+INSERT INTO personas (id, nombre, rol, carrera, pin, activo, creado_en, es_encargado) VALUES (2, 'Julio Cerna', 'docente', NULL, NULL, 1, '2026-10-15 17:39:39', 0);
+INSERT INTO personas (id, nombre, rol, carrera, pin, activo, creado_en, es_encargado) VALUES (3, 'Maikol Leiva', 'docente', NULL, NULL, 1, '2026-10-15 17:39:39', 0);
+INSERT INTO personas (id, nombre, rol, carrera, pin, activo, creado_en, es_encargado) VALUES (4, 'Robert Guamán', 'docente', NULL, NULL, 1, '2026-10-15 17:39:39', 0);
+INSERT INTO personas (id, nombre, rol, carrera, pin, activo, creado_en, es_encargado) VALUES (5, 'Christian David Camacho Morales', 'docente', NULL, NULL, 1, '2026-10-15 17:39:39', 0);
+INSERT INTO personas (id, nombre, rol, carrera, pin, activo, creado_en, es_encargado) VALUES (6, 'Oswaldo Aníbal Menéndez Granizo', 'docente', NULL, NULL, 1, '2026-10-15 17:39:39', 0);
+INSERT INTO personas (id, nombre, rol, carrera, pin, activo, creado_en, es_encargado) VALUES (8, 'Felipe Rojo', 'ayudante', 'Encargado del laboratorio', 'scrypt$0d020143b951091bfe0c3aa2d72efd9b$b4c278324c5cfc5c73e2ca66c8fcb2100033e48790b147622d2122aec193f0e1', 1, '2026-10-15 17:39:39', 1);
+INSERT INTO personas (id, nombre, rol, carrera, pin, activo, creado_en, es_encargado) VALUES (9, 'Vicente', 'ayudante', 'Ayudantía Electrotecnia', 'scrypt$8599ce00aa3bd26c4edc8961e14c76a8$038f348d94b18ac9ccdde38b9886288229fcff91c3980d29ee75d33fa55cb4e9', 1, '2026-10-15 17:39:39', 0);
+INSERT INTO personas (id, nombre, rol, carrera, pin, activo, creado_en, es_encargado) VALUES (10, 'Guillermo', 'ayudante', 'Ayudantía Electrotecnia', 'scrypt$699d07296421417db385a3608fed9d38$be46e5dd4f4f54aa1caa2568ee9918c1b78f4ad24e990035fa89875bbb0aa4ba', 1, '2026-10-15 17:39:39', 0);
+INSERT INTO personas (id, nombre, rol, carrera, pin, activo, creado_en, es_encargado) VALUES (11, 'Nicole', 'ayudante', 'Ayudantía Electrotecnia', 'scrypt$5a16da513fafa80daad02ac08c8ea641$bd5d47f7dc575b9ce91f29b9a94ecbd5d595cd98d1a0ba9db0e6739da7e1cc6e', 1, '2026-10-15 17:39:39', 0);
+INSERT INTO personas (id, nombre, rol, carrera, pin, activo, creado_en, es_encargado) VALUES (12, 'Dayris', 'ayudante', 'Ayudantía Electrotecnia', 'scrypt$be6a6d5af64c379083efdbdd60135e9f$c237a088733dadf1aa46d3e49a72cfc3cbc96d4a3ae1a7dcff4f30e9f0286008', 1, '2026-10-15 17:39:39', 0);
+INSERT INTO personas (id, nombre, rol, carrera, pin, activo, creado_en, es_encargado) VALUES (13, 'Adriana', 'ayudante', 'Ayudantía Electrotecnia', 'scrypt$1b76e9af736006be3e60deb53eb0dd93$2630b0ad9f58e2f38acbc07b43b246b88d8612e321814411e7efd5a4c689f682', 1, '2026-10-15 17:39:39', 0);
+INSERT INTO personas (id, nombre, rol, carrera, pin, activo, creado_en, es_encargado) VALUES (14, 'Adrian', 'ayudante', 'Ayudantía Electrotecnia', 'scrypt$e8bd764c737991b3031bb9293c8675be$e6aedabad26245f08ed9d6a97a6fdbf3e20f313be5ff9bd76d2f1a7511d5df92', 1, '2026-10-15 17:39:39', 0);
+INSERT INTO personas (id, nombre, rol, carrera, pin, activo, creado_en, es_encargado) VALUES (15, 'Way-Yeng', 'ayudante', 'Encargado del laboratorio', 'scrypt$816afdf3d67bdefd41631d5a6e773100$ce5acf41f2f36ec02206165aca2f897f78e3aa6246a7ce4b238802b96f5838bb', 1, '2026-10-15 21:03:58', 1);
 
 -- 19 fila(s) en clases
 INSERT INTO clases (id, codigo_ramo, nombre, docente, dia, bloque, tipo) VALUES (1, 'FAIC-00603-C1', 'Gestión de Proyectos Electrónico', 'Oswaldo Aníbal Menéndez Granizo', 1, 'A', 'clase');

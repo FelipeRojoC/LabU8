@@ -1,19 +1,19 @@
 import { cookies } from "next/headers";
-import { ahora, db, parseFecha } from "@/lib/db";
+import { ahora, db } from "@/lib/db";
 import { bloqueTurnoEn } from "@/lib/queries/horario";
-import { verificarPin } from "@/lib/pin.mjs";
 import { abrir, firmar } from "@/lib/cookie";
 import type { Persona, SesionTurno } from "@/lib/types";
 
 /**
- * Identificarse y abrir turno son dos cosas distintas.
+ * Quién está usando el sistema, y si además tiene el turno abierto.
  *
- * - Iniciar sesión dice QUIÉN está usando el sistema. Es lo que da permisos y
- *   lo que queda registrado en cada entrega y devolución.
+ * La identidad la establece el inicio de sesión con Google (src/lib/auth.ts);
+ * acá solo vive la sesión ya autenticada. Son dos cosas distintas:
+ *
+ * - Estar identificado dice QUIÉN eres. Es lo que da permisos y lo que queda
+ *   registrado en cada entrega y devolución.
  * - Abrir turno además marca la hora de inicio y cuenta para el registro de
  *   horas y los reemplazos.
- *
- * El encargado entra a corregir cosas sin que eso se contabilice como turno.
  */
 
 const COOKIE = "labu8_sesion";
@@ -21,55 +21,8 @@ const COOKIE = "labu8_sesion";
 const hoy = (d = new Date()) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-// ------------------------------------------------- freno a la fuerza bruta
-// Un PIN de 4 dígitos son 10.000 combinaciones, que un script prueba en
-// segundos. El contador vive en la base porque el servidor atiende con varios
-// procesos y uno en memoria no se comparte entre ellos.
-const MAX_INTENTOS = 5;
-const CASTIGO_MIN = 5;
-
-function revisarBloqueo(personaId: number) {
-  const r = db.prepare(
-    `SELECT hasta FROM intentos_login
-     WHERE persona_id = ? AND hasta IS NOT NULL
-       AND datetime(hasta) > datetime('now','localtime')`,
-  ).get(personaId) as { hasta: string } | undefined;
-
-  if (r) {
-    const falta = Math.max(
-      1,
-      Math.ceil(((parseFecha(r.hasta)?.getTime() ?? 0) - Date.now()) / 60000),
-    );
-    throw new Error(
-      `Demasiados intentos fallidos. Espera ${falta} minuto(s) o pídele al encargado que te restablezca el PIN.`,
-    );
-  }
-}
-
-function anotarFallo(personaId: number) {
-  db.prepare(
-    `INSERT INTO intentos_login (persona_id, fallos) VALUES (?, 1)
-     ON CONFLICT(persona_id) DO UPDATE SET fallos = fallos + 1`,
-  ).run(personaId);
-
-  const r = db.prepare("SELECT fallos FROM intentos_login WHERE persona_id = ?")
-    .get(personaId) as { fallos: number };
-
-  if (r.fallos >= MAX_INTENTOS) {
-    db.prepare(
-      `UPDATE intentos_login
-       SET fallos = 0, hasta = datetime('now','localtime','+${CASTIGO_MIN} minutes')
-       WHERE persona_id = ?`,
-    ).run(personaId);
-  }
-}
-
-const limpiarIntentos = (personaId: number) =>
-  db.prepare("DELETE FROM intentos_login WHERE persona_id = ?").run(personaId);
-
 // --------------------------------------------------------------- identidad
 
-/** Quién está usando el sistema, tenga turno abierto o no. */
 export async function usuarioActual(): Promise<Persona | null> {
   const c = await cookies();
   const id = abrir(c.get(COOKIE)?.value);
@@ -86,54 +39,29 @@ export async function encargadoActual(): Promise<Persona | null> {
   return p?.es_encargado ? p : null;
 }
 
-/** Lanza si quien está conectado no es encargado. Para usar en las acciones. */
 export async function exigirEncargado(): Promise<Persona> {
   const p = await encargadoActual();
   if (!p) throw new Error("Esto lo puede hacer solo el encargado.");
   return p;
 }
 
-/** Lanza si no hay nadie identificado. */
 export async function exigirUsuario(): Promise<Persona> {
   const p = await usuarioActual();
-  if (!p) throw new Error("Entra con tu nombre y tu PIN para hacer esto.");
+  if (!p) throw new Error("Inicia sesión para hacer esto.");
   return p;
 }
 
-/**
- * Inicia sesión. `conTurno` decide si además se abre el turno: un ayudante que
- * llega a trabajar lo abre; el encargado que pasa a corregir algo, no.
- */
-export async function iniciarSesion(
-  personaId: number,
-  pin: string,
-  conTurno: boolean,
-): Promise<Persona> {
-  const p = db
-    .prepare("SELECT * FROM personas WHERE id = ? AND activo = 1")
-    .get(personaId) as Persona | undefined;
-  if (!p) throw new Error("Persona no encontrada");
-  if (p.rol !== "ayudante" && p.rol !== "tecnico") {
-    throw new Error("Solo ayudantes o técnicos pueden entrar al sistema");
-  }
-
-  revisarBloqueo(p.id);
-  if (!verificarPin(pin, p.pin)) {
-    anotarFallo(p.id);
-    throw new Error("PIN incorrecto");
-  }
-  limpiarIntentos(p.id);
-
+/** Deja la sesión iniciada. La autenticación ya ocurrió antes de llamar acá. */
+export async function crearSesion(personaId: number, conTurno: boolean) {
   const c = await cookies();
-  c.set(COOKIE, firmar(p.id), {
+  c.set(COOKIE, firmar(personaId), {
     httpOnly: true,
     sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 60 * 60 * 12,
   });
-
-  if (conTurno) marcarInicioTurno(p.id);
-  return p;
+  if (conTurno) marcarInicioTurno(personaId);
 }
 
 export async function cerrarSesion() {
@@ -143,7 +71,6 @@ export async function cerrarSesion() {
 
 // ------------------------------------------------------------------ turnos
 
-/** Turno abierto hoy por esa persona. */
 export function turnoAbiertoDe(personaId: number): SesionTurno | undefined {
   return db.prepare(
     `SELECT * FROM sesiones_turno
@@ -171,7 +98,7 @@ export function marcarFinTurno(personaId: number) {
   }
 }
 
-/** Quien está conectado Y con el turno abierto. Null si solo vino a mirar. */
+/** Quien está identificado Y con el turno abierto. */
 export async function usuarioEnTurno(): Promise<Persona | null> {
   const p = await usuarioActual();
   if (!p) return null;

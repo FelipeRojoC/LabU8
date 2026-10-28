@@ -47,11 +47,11 @@ export type EntradaPersona = Partial<Omit<Persona, "id" | "creado_en">> & { nomb
 export function crearPersona(d: EntradaPersona): number {
   return Number(
     db.prepare(
-      `INSERT INTO personas (nombre, rol, rut, email, telefono, carrera, pin, es_encargado, activo)
-       VALUES (@nombre, @rol, @rut, @email, @telefono, @carrera, @pin, @es_encargado, @activo)`,
+      `INSERT INTO personas (nombre, rol, rut, email, telefono, carrera, es_encargado, activo)
+       VALUES (@nombre, @rol, @rut, @email, @telefono, @carrera, @es_encargado, @activo)`,
     ).run({
       rol: "estudiante", rut: null, email: null, telefono: null,
-      carrera: null, pin: null, es_encargado: 0, activo: 1, ...d,
+      carrera: null, es_encargado: 0, activo: 1, ...d,
     }).lastInsertRowid,
   );
 }
@@ -60,16 +60,9 @@ export function actualizarPersona(id: number, d: Partial<EntradaPersona>) {
   const actual = obtenerPersona(id);
   if (!actual) throw new Error("La persona no existe");
 
-  // Un PIN nuevo levanta el bloqueo por intentos fallidos. Si no, al ayudante
-  // le dicen «pídele al encargado que te lo restablezca», se lo restablecen y
-  // sigue sin poder entrar hasta que pasen los cinco minutos.
-  if (d.pin !== undefined && d.pin !== actual.pin) {
-    db.prepare("DELETE FROM intentos_login WHERE persona_id = ?").run(id);
-  }
-
   db.prepare(
     `UPDATE personas SET nombre=@nombre, rol=@rol, rut=@rut, email=@email,
-        telefono=@telefono, carrera=@carrera, pin=@pin, es_encargado=@es_encargado,
+        telefono=@telefono, carrera=@carrera, es_encargado=@es_encargado,
         activo=@activo WHERE id=@id`,
   ).run({ ...actual, ...d, id });
 }
@@ -109,4 +102,13 @@ export function deudasDe(personaId: number): Deuda[] {
       Math.floor((hoy - (parseFecha(f.vence_en)?.getTime() ?? hoy)) / 86_400_000),
     ),
   }));
+}
+
+/** Nombre de quien ya tiene ese correo, si lo hay. El correo es la identidad. */
+export function correoEnUso(email: string, exceptoId = 0): string | null {
+  const r = db.prepare(
+    `SELECT nombre FROM personas
+     WHERE LOWER(TRIM(email)) = ? AND id <> ?`,
+  ).get(email.trim().toLowerCase(), exceptoId) as { nombre: string } | undefined;
+  return r?.nombre ?? null;
 }

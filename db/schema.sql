@@ -14,10 +14,9 @@ CREATE TABLE IF NOT EXISTS personas (
   rol          TEXT    NOT NULL DEFAULT 'estudiante'
                        CHECK (rol IN ('ayudante','estudiante','docente','tecnico','externo')),
   rut          TEXT,
-  email        TEXT,
+  email        TEXT,            -- correo UCN: es la identidad para entrar
   telefono     TEXT,
   carrera      TEXT,
-  pin          TEXT,            -- solo ayudantes/tecnicos: login simple del turno
   es_encargado INTEGER NOT NULL DEFAULT 0,  -- puede anular prestamos y editar el horario
   activo       INTEGER NOT NULL DEFAULT 1,
   creado_en    TEXT    NOT NULL DEFAULT (datetime('now','localtime'))
@@ -171,16 +170,6 @@ CREATE TABLE IF NOT EXISTS novedades (
 );
 CREATE INDEX IF NOT EXISTS idx_novedades_fecha ON novedades(creado_en DESC);
 CREATE INDEX IF NOT EXISTS idx_novedades_tipo  ON novedades(tipo, visto_en);
-
--- ------------------------------------------------------ intentos de PIN
--- Freno a la fuerza bruta. Va en la base y no en memoria porque el servidor
--- atiende con varios procesos: un contador en memoria se duplica y nunca
--- llega al tope.
-CREATE TABLE IF NOT EXISTS intentos_login (
-  persona_id INTEGER PRIMARY KEY REFERENCES personas(id) ON DELETE CASCADE,
-  fallos     INTEGER NOT NULL DEFAULT 0,
-  hasta      TEXT                        -- bloqueado hasta esta hora local
-);
 
 -- --------------------------------------------------------------- bitacora
 CREATE TABLE IF NOT EXISTS bitacora (

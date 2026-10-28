@@ -22,9 +22,9 @@ npm run seed      # carga horario, catálogos e inventario
 npm start         # http://localhost:3000
 ```
 
-`npm run seed` imprime **una sola vez** los PIN de cada ayudante. Anótalos en
-ese momento: se guardan cifrados y después no se pueden volver a leer, solo
-reemplazar desde la propia aplicación.
+Antes de `npm start` hay que configurar el inicio de sesión: copia
+`.env.example` a `.env.local` y rellena las credenciales de Google (ver
+«Inicio de sesión» más abajo). Sin eso nadie puede entrar.
 
 Para que lo vean otros computadores de la misma red:
 
@@ -53,7 +53,7 @@ otra parte sin pasar por el seed:
 sqlite3 data/labu8.db < db/labu8.sql
 ```
 
-No trae PIN, préstamos, turnos realizados ni bitácora. Se regenera con
+No trae correos, préstamos, turnos realizados ni bitácora. Se regenera con
 `npm run sql` cuando cambien los datos de referencia.
 
 ---
@@ -84,20 +84,29 @@ del encargado**, pensada para repartir entre los ayudantes.
 | **Bitácora** | El muro donde los ayudantes se dejan recados, más los avisos que genera el sistema. |
 | **Encargado** | Toda la gestión, separada: inventario, categorías, ubicaciones, personas, horas y exportaciones. |
 
+### Inicio de sesión
+
+Se entra con la **cuenta Google de la universidad**. Sin sesión iniciada no se
+ve absolutamente nada: todas las páginas redirigen a `/entrar`, y las fotos y
+las exportaciones responden 401 y 403.
+
+Entrar exige **dos** cosas, no una:
+
+1. Que la cuenta sea de un dominio autorizado
+   (`@alumnos.ucn.cl`, `@ucn.cl`, `@ce.ucn.cl`, configurable en `LABU8_DOMINIOS`).
+2. Que **ese correo esté registrado** en la ficha de alguien del laboratorio.
+
+La segunda es la que importa: con solo la primera entraría cualquiera de los
+miles de alumnos de la universidad, que es justo lo que se quiere evitar.
+
 ### Entrar y abrir turno son dos cosas distintas
 
-Al entrar se elige el nombre y se escribe el PIN de 4 dígitos, y aparecen dos
-botones:
+Iniciar sesión dice quién eres y es lo que da permisos. **Abrir turno** es
+aparte: marca la hora real de inicio y cuenta para el registro de horas y los
+reemplazos. Se abre y se cierra desde la cabecera, cuando corresponda.
 
-- **Entrar y abrir turno** — para el ayudante que llega a trabajar. Queda
-  registrada la hora real de inicio, y al cerrarlo la de término. Esa marca es
-  la que permite ver después **quién hizo reemplazo**: las horas se cuentan
-  contra quien abrió el turno, no contra el horario.
-- **Solo entrar** — identificarse sin que cuente como turno trabajado. Es lo
-  que usa el encargado cuando pasa a revisar o corregir algo.
-
-Quien entró sin turno puede abrirlo después, con el botón de la cabecera. Lo que
-da permisos es haber entrado; abrir turno solo suma horas.
+Así el encargado puede entrar a revisar o corregir algo sin fichar una jornada
+que no trabajó.
 
 ### Prestar
 
@@ -159,22 +168,6 @@ se marca con una casilla en la ficha de la persona, y se comprueba en el
 servidor: esconder los botones no basta. **No hace falta tener turno abierto**
 para gestionar: basta con haber entrado.
 
-### Si alguien olvida su PIN
-
-El encargado entra a **Encargado → Personas**, edita a esa persona y escribe 4
-dígitos nuevos en «PIN del turno». El anterior deja de valer en el acto y, si
-estaba bloqueada por intentos fallidos, el bloqueo se levanta. Dejar el campo
-vacío conserva el que tenía, para poder corregirle el correo sin tocarle el PIN.
-
-**Si son los encargados los que pierden el suyo**, nadie puede entrar a
-arreglarlo desde la aplicación. Para eso está la salida por consola, que exige
-acceso al servidor:
-
-```bash
-npm run pin                    # lista quién puede entrar
-npm run pin -- "Way-Yeng"      # le genera un PIN nuevo y lo muestra
-```
-
 ### Exportar
 
 El encargado tiene botones de descarga en Inventario, Préstamos y Registro de
@@ -187,26 +180,20 @@ sin romper las tildes.
 
 Lo que ya está resuelto:
 
-- **Los PIN no se guardan en claro.** Se almacena un hash scrypt con sal. No
-  están en el repositorio: se generan al azar en cada instalación y se muestran
-  una sola vez. No hay forma de consultarlos después, ni mirando la base: si
-  alguien lo olvida, se le pone uno nuevo.
+- **La autenticación la hace Google**, con las cuentas de la universidad. El
+  sistema no guarda ni ve contraseñas.
+- **No se ve nada sin sesión**: la comprobación está en el layout del grupo de
+  rutas, así que ninguna página puede olvidarse de hacerla, y las fotos y las
+  exportaciones la repiten por su cuenta.
 - **La cookie de sesión va firmada** (HMAC-SHA256). No se puede inventar: antes
   llevaba el número de la persona en claro y bastaba escribirlo en el navegador
   para entrar como esa persona. La clave se genera sola en `data/` y dura 12
   horas.
-- **Freno a la fuerza bruta**: cinco PIN errados bloquean la cuenta cinco
-  minutos. El contador vive en la base, porque el servidor atiende con varios
-  procesos y uno en memoria no se comparte.
 - Las escrituras comprueban el permiso en el servidor, no en la interfaz.
 - Las fotos se sirven por nombre plano; no se puede salir del directorio.
 
 Lo que **falta decidir** antes de abrirlo a la red:
 
-- **No hay inicio de sesión institucional.** Cualquiera que llegue a la URL ve
-  el inventario y puede registrar préstamos. Las opciones son restringir el
-  acceso a la red del laboratorio (lista blanca de IP en nginx) o ponerlo detrás
-  del SSO de la universidad.
 - **Datos personales**: se guardan nombre, RUT, correo y teléfono de quien
   retira equipos. Conviene confirmar con la universidad qué corresponde guardar
   y por cuánto tiempo.
@@ -245,7 +232,7 @@ mkdir -p /var/lib/labu8 && chown labu8:labu8 /var/lib/labu8
 # como labu8
 cd /opt && git clone https://github.com/FelipeRojoC/LabU8.git labu8 && cd labu8
 npm ci && npm run build
-LABU8_DATA_DIR=/var/lib/labu8 npm run seed     # anota los PIN que imprime
+LABU8_DATA_DIR=/var/lib/labu8 npm run seed
 ```
 
 ### Servicio y proxy
@@ -303,7 +290,7 @@ Los cambios de forma de la base se aplican solos al arrancar
 | `db/inventario-inicial.json` | El inventario de la planilla del laboratorio |
 | `scripts/seed.mjs` | Carga inicial |
 | `scripts/exportar-sql.mjs` | Genera `db/labu8.sql` |
-| `src/lib/` | Base de datos, sesiones, PIN, migraciones |
+| `src/lib/` | Base de datos, sesiones, autenticación, migraciones |
 | `src/lib/queries/` | Consultas: `items`, `prestamos`, `personas`, `horario`, `turnos`, `novedades` |
 | `src/actions/` | Server actions: todas las escrituras pasan por aquí |
 | `src/app/` | Páginas |
@@ -354,6 +341,6 @@ los cambios son los parámetros con nombre (`@x` → `$1`), `AUTOINCREMENT` →
 | `npm start` | Levanta la versión compilada |
 | `npm run seed` | Carga lo que falte; no pisa lo que ya está |
 | `npm run sql` | Regenera `db/labu8.sql` |
-| `npm run pin` | Lista quién puede entrar; con un nombre, le restablece el PIN |
+| `npm run correo` | Lista quién puede entrar; con nombre y correo, lo registra |
 | `npm run reset` | Borra **todo** y recarga. Se niega a correr si la base ya tiene actividad real |
 | `npm run lint` | Revisa el código |

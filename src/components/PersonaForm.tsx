@@ -41,30 +41,21 @@ export function PersonaForm({ persona }: { persona?: Persona }) {
         <Campo etiqueta="RUT">
           <input name="rut" defaultValue={persona?.rut ?? ""} className="input-base" />
         </Campo>
-        <Campo etiqueta="Correo">
-          <input name="email" type="email" defaultValue={persona?.email ?? ""} className="input-base" />
+        <Campo
+          etiqueta="Correo UCN"
+          hint="Con este correo entra al sistema. Tiene que ser el institucional."
+          className="col-span-2"
+        >
+          <input
+            name="email" type="email" defaultValue={persona?.email ?? ""}
+            className="input-base" placeholder="nombre.apellido@alumnos.ucn.cl"
+          />
         </Campo>
         <Campo etiqueta="Teléfono">
           <input name="telefono" defaultValue={persona?.telefono ?? ""} className="input-base" />
         </Campo>
         <Campo etiqueta="Carrera" className="col-span-2">
           <input name="carrera" defaultValue={persona?.carrera ?? ""} className="input-base" />
-        </Campo>
-        <Campo
-          etiqueta="PIN del turno"
-          hint={
-            persona?.pin
-              ? "Tiene uno puesto. Escribe 4 dígitos solo si quieres reemplazarlo."
-              : "4 dígitos. Se guarda cifrado: después no se puede volver a leer."
-          }
-          className="col-span-2"
-        >
-          <input
-            name="pin" inputMode="numeric" maxLength={4} pattern="\d{4}"
-            className="input-base font-mono"
-            placeholder={persona?.pin ? "••••  (sin cambios)" : "4 dígitos"}
-            autoComplete="off"
-          />
         </Campo>
       </div>
 

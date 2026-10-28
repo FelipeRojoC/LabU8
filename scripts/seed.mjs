@@ -8,7 +8,6 @@ import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
 import { migrar } from "../src/lib/migrar.mjs";
-import { generarPin, hashPin } from "../src/lib/pin.mjs";
 
 const RESET = process.argv.includes("--reset");
 const DATA_DIR = process.env.LABU8_DATA_DIR ?? path.join(process.cwd(), "data");
@@ -100,25 +99,21 @@ const DOCENTES = [
   "Christian David Camacho Morales", "Oswaldo Aníbal Menéndez Granizo",
 ];
 const insPersona = db.prepare(
-  `INSERT INTO personas (nombre,rol,pin,carrera,email,es_encargado) VALUES (?,?,?,?,?,?)`,
+  `INSERT INTO personas (nombre,rol,carrera,email,es_encargado) VALUES (?,?,?,?,?)`,
 );
 const existePersona = db.prepare("SELECT id FROM personas WHERE nombre = ?");
 
-// Los PIN se generan al azar en cada instalación y se muestran una sola vez al
-// final. No viven en el repositorio: acá solo queda el código que los crea.
-const pinesGenerados = [];
+// El acceso es con las cuentas Google de la universidad: quien entra se
+// identifica por su correo UCN. Sin correo en la ficha, no puede entrar.
+const sinCorreo = [];
 
-function persona(nombre, rol, { conPin = false, carrera = null, email = null, encargado = 0 } = {}) {
+function persona(nombre, rol, { carrera = null, email = null, encargado = 0 } = {}) {
   const e = existePersona.get(nombre);
   if (e) return e.id;
-  let pin = null;
-  if (conPin) {
-    const claro = generarPin();
-    pinesGenerados.push([nombre, claro, encargado]);
-    pin = hashPin(claro);
-  }
-  return Number(insPersona.run(nombre, rol, pin, carrera, email, encargado).lastInsertRowid);
+  if (!email && (rol === "ayudante" || rol === "tecnico")) sinCorreo.push(nombre);
+  return Number(insPersona.run(nombre, rol, carrera, email, encargado).lastInsertRowid);
 }
+
 for (const d of DOCENTES) persona(d, "docente");
 
 // --------------------------------------------- ayudantes y sus turnos
@@ -127,16 +122,17 @@ for (const d of DOCENTES) persona(d, "docente");
 const AYUDANTES = ["Vicente", "Guillermo", "Nicole", "Dayris", "Adriana", "Adrian"];
 // Encargados del laboratorio: los únicos que pueden anular préstamos y tocar
 // el horario.
-const ENCARGADOS = ["Felipe Rojo", "Way-Yeng"];
-for (const n of ENCARGADOS) {
-  persona(n, "ayudante", { conPin: true, carrera: "Encargado del laboratorio", encargado: 1 });
-}
+// Felipe entra con su correo institucional: es la primera cuenta, la que
+// permite registrar el correo de todos los demás desde la aplicación.
+persona("Felipe Rojo", "ayudante", {
+  carrera: "Encargado del laboratorio",
+  email: "felipe.rojo@alumnos.ucn.cl",
+  encargado: 1,
+});
+persona("Way-Yeng", "ayudante", { carrera: "Encargado del laboratorio", encargado: 1 });
 
 const idAyudante = new Map(
-  AYUDANTES.map((n) => [
-    n,
-    persona(n, "ayudante", { conPin: true, carrera: "Ayudantía Electrotecnia" }),
-  ]),
+  AYUDANTES.map((n) => [n, persona(n, "ayudante", { carrera: "Ayudantía Electrotecnia" })]),
 );
 
 // Los bloques de ayudantía, con los nombres que se usan en el laboratorio.
@@ -249,11 +245,10 @@ console.log(
   `personas:${cuenta("personas")} turnos:${cuenta("turnos")} items:${cuenta("items")}`,
 );
 
-if (pinesGenerados.length) {
-  console.log("\n  PIN iniciales — anótalos AHORA, no se pueden volver a ver:\n");
-  for (const [nombre, pin, encargado] of pinesGenerados) {
-    console.log(`    ${nombre.padEnd(14)} ${pin}${encargado ? "   (encargado)" : ""}`);
-  }
-  console.log("\n  Se guardan cifrados. Para cambiarlos: Encargado → Personas.\n");
+if (sinCorreo.length) {
+  console.log("\n  Falta el correo UCN de:  " + sinCorreo.join(", "));
+  console.log("  Sin correo no pueden entrar. Se les pone desde la aplicación");
+  console.log("  (Encargado → Personas) o por consola:\n");
+  console.log(`    npm run correo -- "${sinCorreo[0]}" nombre.apellido@alumnos.ucn.cl\n`);
 }
 db.close();

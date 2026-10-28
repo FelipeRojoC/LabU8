@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { UPLOADS_DIR } from "@/lib/db";
+import { usuarioActual } from "@/lib/session";
 
 const MIME: Record<string, string> = {
   ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
@@ -9,6 +10,9 @@ const MIME: Record<string, string> = {
 
 /** Sirve las fotos guardadas en data/uploads (fuera de public/). */
 export async function GET(_req: Request, ctx: { params: Promise<{ nombre: string }> }) {
+  // El inventario no se ve sin sesión, y sus fotos tampoco.
+  if (!(await usuarioActual())) return new Response("No autorizado", { status: 401 });
+
   const { nombre } = await ctx.params;
   if (nombre.includes("/") || nombre.includes("\\") || nombre.includes("..")) {
     return new Response("Nombre inválido", { status: 400 });

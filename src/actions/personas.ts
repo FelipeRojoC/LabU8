@@ -2,9 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import {
-  actualizarPersona, buscarPersonas, crearPersona, deudasDe, obtenerPersona,
+  actualizarPersona, buscarPersonas, correoEnUso, crearPersona, deudasDe,
 } from "@/lib/queries/personas";
-import { hashPin } from "@/lib/pin.mjs";
 import type { Rol } from "@/lib/types";
 
 export interface Resultado { ok: boolean; error?: string; id?: number }
@@ -15,22 +14,23 @@ export async function guardarPersonaAction(_prev: Resultado, fd: FormData): Prom
     if (nombre.length < 2) return { ok: false, error: "Escribe el nombre completo" };
 
     const idPersona = Number(fd.get("id")) || 0;
-    const anterior = idPersona ? obtenerPersona(idPersona) : undefined;
-    const nuevoPin = String(fd.get("pin") ?? "").trim();
-    if (nuevoPin && !/^\d{4}$/.test(nuevoPin)) {
-      return { ok: false, error: "El PIN tiene que ser de 4 dígitos" };
+    const correo = String(fd.get("email") ?? "").trim().toLowerCase();
+
+    // El correo es la identidad para entrar: tiene que ser único.
+    if (correo) {
+      const ocupado = correoEnUso(correo, idPersona);
+      if (ocupado) {
+        return { ok: false, error: `Ese correo ya está en la ficha de ${ocupado}` };
+      }
     }
 
     const datos = {
       nombre,
       rol: (String(fd.get("rol") || "estudiante") as Rol),
       rut: String(fd.get("rut") ?? "").trim() || null,
-      email: String(fd.get("email") ?? "").trim() || null,
+      email: correo || null,
       telefono: String(fd.get("telefono") ?? "").trim() || null,
       carrera: String(fd.get("carrera") ?? "").trim() || null,
-      // El PIN se guarda hasheado. Dejarlo vacío conserva el que ya tenía:
-      // nunca se puede volver a leer, solo reemplazar.
-      pin: nuevoPin ? hashPin(nuevoPin) : anterior?.pin ?? null,
       es_encargado: fd.get("es_encargado") ? 1 : 0,
       activo: fd.get("activo") ? 1 : 0,
     };

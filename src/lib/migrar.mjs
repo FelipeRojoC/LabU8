@@ -5,8 +5,6 @@
  * script de carga inicial (scripts/seed.mjs), por eso es JS plano.
  */
 
-import { esHash, hashPin } from "./pin.mjs";
-
 const columnas = (db, tabla) =>
   db.prepare(`PRAGMA table_info('${tabla}')`).all().map((c) => c.name);
 
@@ -58,16 +56,11 @@ export function migrar(db, schema) {
     db.exec("PRAGMA foreign_keys=ON;");
   }
 
-  // Los PIN se guardaban en claro. Se convierten a hash una sola vez; después
-  // de esto ya no son recuperables, solo se pueden restablecer.
+  // El acceso pasó a ser con las cuentas Google de la universidad: el PIN y
+  // su contador de intentos ya no se usan. El correo es ahora la identidad.
+  db.exec("DROP TABLE IF EXISTS intentos_login;");
   if (columnas(db, "personas").includes("pin")) {
-    const enClaro = db
-      .prepare("SELECT id, pin FROM personas WHERE pin IS NOT NULL AND pin <> ''")
-      .all()
-      .filter((p) => !esHash(p.pin));
-    const up = db.prepare("UPDATE personas SET pin = ? WHERE id = ?");
-    for (const p of enClaro) up.run(hashPin(p.pin), p.id);
-    if (enClaro.length) console.log(`· ${enClaro.length} PIN convertidos a hash`);
+    db.exec("ALTER TABLE personas DROP COLUMN pin;");
   }
 
   // El estado 'cancelado' pasó a llamarse 'anulado' y se agregó quién anuló y
