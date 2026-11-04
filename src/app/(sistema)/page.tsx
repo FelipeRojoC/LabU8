@@ -27,11 +27,14 @@ function Metrica({
   icono: typeof Boxes; valor: number | string; etiqueta: string; href: string; tono?: string;
 }) {
   return (
-    <Link href={href} className="card flex items-center gap-3 p-4 transition hover:shadow-md">
-      <Icono size={22} className={tono} aria-hidden />
-      <div>
-        <p className="text-2xl leading-none font-semibold">{valor}</p>
-        <p className="mt-1 text-xs text-muted">{etiqueta}</p>
+    <Link
+      href={href}
+      className="card flex items-center gap-2.5 p-3 transition hover:shadow-md sm:gap-3 sm:p-4"
+    >
+      <Icono size={20} className={`${tono} shrink-0`} aria-hidden />
+      <div className="min-w-0">
+        <p className="text-xl leading-none font-semibold sm:text-2xl">{valor}</p>
+        <p className="mt-1 text-[11px] leading-tight text-muted sm:text-xs">{etiqueta}</p>
       </div>
     </Link>
   );
@@ -78,10 +81,9 @@ export default async function Panel() {
             {e.ahora.toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })} h
           </p>
         </div>
-        <div className="flex gap-2">
-          <Link href="/prestamos/nuevo" className="btn btn-primary">Registrar salida</Link>
-          <Link href="/inventario/nuevo" className="btn btn-ghost">Agregar ítem</Link>
-        </div>
+        <Link href="/prestamos/nuevo" className="btn btn-primary w-full sm:w-auto">
+          Registrar salida
+        </Link>
       </div>
 
       {incidencias.length > 0 && (
@@ -109,7 +111,7 @@ export default async function Panel() {
         </section>
       )}
 
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
         <Metrica icono={PackageCheck} valor={rp.activos} etiqueta="Préstamos activos" href="/prestamos" />
         <Metrica
           icono={AlertTriangle} valor={rp.atrasados} etiqueta="Atrasados"

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { X } from "lucide-react";
 import {
   estadoAhora, listarBloques, listarBloquesTurno, listarClases, listarTurnos,
@@ -19,7 +20,9 @@ const TONO = {
   protegido: "border-slate-300 bg-slate-100",
 } as const;
 
-export default async function Horario() {
+export default async function Horario({
+  searchParams,
+}: { searchParams: Promise<{ dia?: string }> }) {
   const bloques = listarBloques();
   const bloquesTurno = listarBloquesTurno();
   const clases = listarClases();
@@ -27,6 +30,11 @@ export default async function Horario() {
   const ayudantes = listarPersonas({ rol: "ayudante" });
   const ahora = estadoAhora();
   const encargado = await encargadoActual();
+
+  // En teléfono no cabe una semana completa: se muestra un día a la vez, y
+  // por defecto el de hoy. En pantalla ancha siguen las dos tablas enteras.
+  const sp = await searchParams;
+  const diaVisible = Number(sp.dia) || (ahora.dia <= 6 ? ahora.dia : 1);
 
   return (
     <div className="space-y-6">
@@ -38,8 +46,109 @@ export default async function Horario() {
         </p>
       </div>
 
+      {/* --------------------------------------------- un día, en teléfono */}
+      <section className="space-y-3 lg:hidden">
+        <div className="-mx-4 overflow-x-auto px-4">
+          <div className="flex gap-1.5">
+            {CLASES_DIAS.map((d) => (
+              <Link
+                key={d}
+                href={`/horario?dia=${d}`}
+                aria-current={d === diaVisible ? "page" : undefined}
+                className={`inline-flex min-h-11 items-center rounded-full border px-4 text-sm whitespace-nowrap ${
+                  d === diaVisible
+                    ? "border-brand bg-brand text-white"
+                    : "border-line bg-surface text-muted"
+                }`}
+              >
+                {DIAS[d].slice(0, 3)}
+                {d === ahora.dia && <span className="ml-1 text-[10px]">hoy</span>}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <div className="card">
+          <h2 className="border-b border-line px-4 py-2.5 text-sm font-semibold">
+            Turnos de ayudantes · {DIAS[diaVisible]}
+          </h2>
+          <ul className="divide-y divide-line">
+            {bloquesTurno.map((b) => {
+              const ts = turnos.filter((t) => t.dia === diaVisible && t.bloque === b.codigo);
+              const enCurso =
+                ahora.turno?.franja.bloque.codigo === b.codigo && diaVisible === ahora.dia;
+              return (
+                <li
+                  key={b.codigo}
+                  className={`flex items-center gap-3 px-4 py-2.5 ${
+                    enCurso ? "bg-green-50" : ""
+                  }`}
+                >
+                  <span className="w-24 shrink-0">
+                    <span className="block text-sm font-semibold">{b.codigo}</span>
+                    <span className="font-mono text-[11px] text-muted">
+                      {b.inicio}–{b.termino}
+                    </span>
+                  </span>
+                  <span className="flex-1 text-sm">
+                    {ts.length ? ts.map((t) => t.persona).join(", ")
+                               : <span className="text-muted">sin asignar</span>}
+                  </span>
+                  {enCurso && (
+                    <span className="shrink-0 text-[10px] font-semibold text-green-800 uppercase">
+                      ● ahora
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        <div className="card">
+          <h2 className="border-b border-line px-4 py-2.5 text-sm font-semibold">
+            Clases en el laboratorio · {DIAS[diaVisible]}
+          </h2>
+          <ul className="divide-y divide-line">
+            {bloques.map((b) => {
+              const cs = clases.filter((c) => c.dia === diaVisible && c.bloque === b.codigo);
+              const enCurso =
+                ahora.clase?.franja.bloque.codigo === b.codigo && diaVisible === ahora.dia;
+              return (
+                <li
+                  key={b.codigo}
+                  className={`flex items-start gap-3 px-4 py-2.5 ${enCurso ? "bg-green-50" : ""}`}
+                >
+                  <span className="w-24 shrink-0">
+                    <span className="block text-sm font-semibold">{b.codigo}</span>
+                    <span className="font-mono text-[11px] text-muted">
+                      {b.inicio}–{b.termino}
+                    </span>
+                  </span>
+                  <span className="flex-1 text-sm">
+                    {cs.length ? cs.map((c) => (
+                      <span key={c.id} className="block">
+                        {c.nombre}
+                        {c.docente && (
+                          <span className="block text-[11px] text-muted">{c.docente}</span>
+                        )}
+                      </span>
+                    )) : <span className="text-ok">libre</span>}
+                  </span>
+                  {enCurso && (
+                    <span className="shrink-0 text-[10px] font-semibold text-green-800 uppercase">
+                      ● ahora
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </section>
+
       {/* ------------------------------------------- turnos de ayudantes */}
-      <section className="space-y-3">
+      <section className="hidden space-y-3 lg:block">
         <h2 className="font-semibold">Turnos de ayudantes</h2>
         <div className="card overflow-x-auto">
           <table className="w-full min-w-3xl border-collapse text-sm">
@@ -113,7 +222,7 @@ export default async function Horario() {
       </section>
 
       {/* -------------------------------------------- horario de clases */}
-      <section className="space-y-3">
+      <section className="hidden space-y-3 lg:block">
         <h2 className="font-semibold">Clases en el laboratorio</h2>
         <div className="card overflow-x-auto">
           <table className="w-full min-w-4xl border-collapse text-sm">

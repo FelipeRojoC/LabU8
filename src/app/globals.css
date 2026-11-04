@@ -242,6 +242,23 @@ input[type="datetime-local"] { cursor: pointer; }
   .card, .btn { transition: none; }
 }
 
+/* ------------------------------------------------------------- teléfono
+   El sistema se usa sobre todo desde el celular, así que en pantalla
+   angosta los controles crecen hasta el tamaño que necesita un dedo. */
+@media (max-width: 1023px) {
+  .btn { min-height: 2.75rem; }
+
+  /* 16px no es capricho: con menos, Safari en iPhone hace zoom al tocar el
+     campo y deja la página descuadrada. */
+  .input-base {
+    min-height: 2.75rem;
+    font-size: 1rem;
+  }
+
+  /* La barra inferior tapa lo último de cualquier lista larga. */
+  body { padding-bottom: env(safe-area-inset-bottom); }
+}
+
 @media print {
   .no-print { display: none !important; }
   body::before, .fondo-circuito { display: none; }
