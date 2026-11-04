@@ -33,8 +33,9 @@
 }
 
 /* =========================================================== fondo circuito
-   Rejilla de PCB fija + dos halos que derivan muy lento. Solo se anima
-   `transform`, así que lo resuelve el compositor y no cuesta nada. */
+   Una placa con corriente recorriendo las pistas. Tres capas, de atrás hacia
+   adelante: el halo que deriva, las pistas animadas (FondoCircuito) y el
+   contenido. Solo se anima `stroke-dashoffset` y `transform`, que es barato. */
 body {
   background: var(--background);
   color: var(--foreground);
@@ -42,38 +43,58 @@ body {
   isolation: isolate;
 }
 
-/* capa de pistas: se desplaza una baldosa completa, así el bucle es invisible */
+/* halos de color que derivan muy lento */
 body::before {
   content: "";
   position: fixed;
-  inset: -160px;
-  z-index: -2;
-  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27120%27%20height%3D%27120%27%20viewBox%3D%270%200%20120%20120%27%3E%3Cg%20fill%3D%27none%27%20stroke%3D%27%235b21b6%27%20stroke-opacity%3D%270.30%27%20stroke-width%3D%271.6%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M0%2024H40L60%2044H80L100%2024H120%27%2F%3E%3Cpath%20d%3D%27M0%2096H20L40%2076H70L90%2096H120%27%2F%3E%3Cpath%20d%3D%27M24%200V30L44%2050V70L24%2090V120%27%2F%3E%3Cpath%20d%3D%27M96%200V20L76%2040V80L96%20100V120%27%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%27%235b21b6%27%20fill-opacity%3D%270.38%27%3E%3Ccircle%20cx%3D%2740%27%20cy%3D%2724%27%20r%3D%272.8%27%2F%3E%3Ccircle%20cx%3D%27100%27%20cy%3D%2724%27%20r%3D%272.8%27%2F%3E%3Ccircle%20cx%3D%2720%27%20cy%3D%2796%27%20r%3D%272.8%27%2F%3E%3Ccircle%20cx%3D%2790%27%20cy%3D%2796%27%20r%3D%272.8%27%2F%3E%3Ccircle%20cx%3D%2724%27%20cy%3D%2730%27%20r%3D%272.8%27%2F%3E%3Ccircle%20cx%3D%2744%27%20cy%3D%2770%27%20r%3D%272.8%27%2F%3E%3Ccircle%20cx%3D%2796%27%20cy%3D%2720%27%20r%3D%272.8%27%2F%3E%3Ccircle%20cx%3D%2776%27%20cy%3D%2780%27%20r%3D%272.8%27%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
-  background-size: 120px 120px;
-  opacity: 0.5;
-  animation: recorrido 70s linear infinite;
-}
-
-body::after {
-  content: "";
-  position: fixed;
   inset: -20vmax;
-  z-index: -1;
+  z-index: -3;
   pointer-events: none;
   background:
-    radial-gradient(38vmax 38vmax at 18% 12%, color-mix(in srgb, var(--brand) 20%, transparent), transparent 70%),
-    radial-gradient(32vmax 32vmax at 85% 70%, rgba(13, 148, 136, 0.16), transparent 70%);
+    radial-gradient(38vmax 38vmax at 18% 12%, color-mix(in srgb, var(--brand) 22%, transparent), transparent 70%),
+    radial-gradient(32vmax 32vmax at 85% 70%, rgba(13, 148, 136, 0.18), transparent 70%),
+    radial-gradient(26vmax 26vmax at 60% 100%, rgba(167, 139, 250, 0.16), transparent 70%);
   animation: deriva 46s ease-in-out infinite alternate;
-}
-
-@keyframes recorrido {
-  from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(-120px, -120px, 0); }
 }
 
 @keyframes deriva {
   from { transform: translate3d(0, 0, 0) scale(1); }
   to   { transform: translate3d(4vw, 3vh, 0) scale(1.08); }
+}
+
+.fondo-circuito {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  opacity: 0.85;
+}
+.fondo-circuito svg { width: 100%; height: 100%; display: block; }
+
+/* El trazo es un guion corto seguido de un hueco larguísimo: al correr el
+   desfase, ese guion recorre la pista como si fuera el pulso de corriente. */
+.corriente {
+  stroke-dasharray: 90 2400;
+  stroke-dashoffset: 2490;
+  animation-name: circular;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  filter: drop-shadow(0 0 4px rgba(167, 139, 250, 0.55));
+}
+
+@keyframes circular {
+  to { stroke-dashoffset: 0; }
+}
+
+.via {
+  animation: latir 5s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes latir {
+  0%, 100% { opacity: 0.22; }
+  50%      { opacity: 0.5; }
 }
 
 /* ============================================================= protoboard
@@ -216,12 +237,13 @@ input[type="datetime-local"] { cursor: pointer; }
 
 /* quien prefiera no ver movimiento, no lo ve */
 @media (prefers-reduced-motion: reduce) {
-  body::before, body::after, .protoboard::after { animation: none; }
+  body::before, .protoboard::after, .corriente, .via { animation: none; }
+  .corriente { stroke-dasharray: none; stroke-dashoffset: 0; opacity: .35; }
   .card, .btn { transition: none; }
 }
 
 @media print {
   .no-print { display: none !important; }
-  body::before, body::after { display: none; }
+  body::before, .fondo-circuito { display: none; }
   body { cursor: auto; }
 }
